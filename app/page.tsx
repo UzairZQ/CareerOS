@@ -15,26 +15,8 @@ export default function LoginPage() {
             className="font-display text-3xl tracking-tight text-white"
             href="/"
           >
-            CareerOS<sup className="text-xs">®</sup>
+            CareerOS
           </Link>
-
-          <div className="hidden items-center gap-9 md:flex">
-            {["Home", "Applications", "Hours", "CV Check", "Skill Gap"].map(
-              (item, index) => (
-                <a
-                  className={`text-sm transition-colors ${
-                    index === 0
-                      ? "text-white"
-                      : "text-white/60 hover:text-white"
-                  }`}
-                  href="#"
-                  key={item}
-                >
-                  {item}
-                </a>
-              ),
-            )}
-          </div>
 
           <Link
             className="liquid-glass rounded-full px-6 py-2.5 text-sm text-white transition-transform hover:scale-[1.03]"
