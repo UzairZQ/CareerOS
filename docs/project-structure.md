@@ -4,55 +4,64 @@ Created: 2026-07-04 20:57 CEST
 
 ## Current Repository State
 
-The previous prototype files were deleted so CareerOS Germany can start clean.
-
-Current files:
+The repository now contains the implemented full-stack vertical slice, not only the visual prototype.
 
 ```text
 CareerOS/
   app/
-    dashboard/
-      page.tsx
+    api/
+      ai-insight/route.ts
+      ai-settings/route.ts
+    auth/callback/route.ts
+    dashboard/page.tsx
     globals.css
     layout.tsx
     page.tsx
   components/
-    animated-heading.tsx
-    fade-in.tsx
-  implementation-plan.md
-  package.json
-  tailwind.config.ts
-  docs/
-    project-structure.md
-```
-
-## Planned Structure
-
-The exact app structure will be decided after milestone 1 is confirmed.
-
-If we choose Next.js App Router:
-
-```text
-CareerOS/
-  app/
-  components/
+    auth-panel.tsx
+    add-application-form.tsx
+    application-management-panel.tsx
+    work-hours-permit.tsx
+    jd-evidence-workspace.tsx
+    cv-check-panel.tsx
+    application-assistant-panel.tsx
+    profile-settings-panel.tsx
+    ai-settings-panel.tsx
+    dashboard-analytics-panel.tsx
   lib/
+    careeros-analyzer.ts
+    dashboard-analytics.ts
+    dashboard-validation.ts
+    application-validation.ts
+    work-hours.ts
+    user-profile.ts
+    ai-providers.ts
+    auth-navigation.ts
+    supabase/
+    server/secret-crypto.ts
   supabase/
-  docs/
+    schema.sql
+    migrations/20260709_require_proof_for_cv_ready.sql
+  tests/
+    analyzer.test.ts
+    validation.test.ts
+    integration/supabase-flow.test.ts
+    e2e/dashboard-authenticated.spec.ts
+  proxy.ts
+  .env.example
+  eslint.config.mjs
+  playwright.config.ts
+  vitest.config.ts
+  context.md
+  implementation-plan.md
+  README.md
 ```
 
-If we choose Vite + React Router:
+## Architecture Decision
 
-```text
-CareerOS/
-  src/
-    components/
-    modules/
-    routes/
-    lib/
-  supabase/
-  docs/
-```
+Next.js App Router is the confirmed framework. React components live in
+`components/`, server-rendered route composition lives in `app/`, shared domain
+logic lives in `lib/`, and Supabase SQL/RLS lives in `supabase/`.
 
 ## Decision Log
 
@@ -64,3 +73,4 @@ CareerOS/
 - 2026-07-04: Added Module 5: AI Insights (Bring Your Own Key). Gemini is the default optional provider, with Groq and OpenRouter planned as alternatives. AI stays off by default and runs only through backend functions using encrypted per-user keys.
 - 2026-07-04: `milestone-1.md` will be created only after discussion.
 - 2026-07-06: Created the first Next.js visual prototype with `/` as the animated video login/entry screen and `/dashboard` as the CareerOS dark premium dashboard mock.
+- 2026-07-09: Implemented the Supabase-backed auth/dashboard vertical slice, optional BYOK AI routes, authenticated E2E coverage, proof-link enforcement, honest empty state, local selectable-text PDF extraction, live proof-link migration verification, and production verification gates.

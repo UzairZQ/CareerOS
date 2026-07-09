@@ -4,113 +4,248 @@ import {
   ChartNoAxesCombined,
   FileCheck2,
   HelpCircle,
-  LogOut,
   KeyRound,
   Search,
-  Settings,
   ShieldCheck,
   SlidersHorizontal,
   Timer,
+  UserRound,
 } from "lucide-react";
+import { redirect } from "next/navigation";
+import { AddApplicationForm } from "@/components/add-application-form";
+import { AiSettingsPanel } from "@/components/ai-settings-panel";
+import {
+  ApplicationManagementPanel,
+  type ManagedApplication,
+} from "@/components/application-management-panel";
+import { ApplicationAssistantPanel } from "@/components/application-assistant-panel";
+import { CvCheckPanel } from "@/components/cv-check-panel";
+import { DashboardAnalyticsPanel } from "@/components/dashboard-analytics-panel";
+import { JdEvidenceWorkspace } from "@/components/jd-evidence-workspace";
+import { ProfileSettingsPanel } from "@/components/profile-settings-panel";
+import { SignOutButton } from "@/components/sign-out-button";
+import { WorkHoursPermit } from "@/components/work-hours-permit";
+import { calculateDashboardAnalytics } from "@/lib/dashboard-analytics";
+import type { AiProvider } from "@/lib/ai-providers";
+import { createClient } from "@/lib/supabase/server";
+import { calculateProfileReadiness, type UserProfileData } from "@/lib/user-profile";
+import { getYearRange, type WorkHourLog } from "@/lib/work-hours";
 
 const navItems = [
-  { label: "Dashboard", icon: SlidersHorizontal, active: true },
-  { label: "Applications", icon: BriefcaseBusiness },
-  { label: "Work Hours", icon: Timer },
-  { label: "CV Check", icon: FileCheck2 },
-  { label: "Skill Gap", icon: ChartNoAxesCombined },
-  { label: "AI Insights", icon: KeyRound },
+  { label: "Overview", icon: SlidersHorizontal, href: "#overview" },
+  { label: "Applications", icon: BriefcaseBusiness, href: "#applications" },
+  { label: "Work Hours", icon: Timer, href: "#work-hours" },
+  { label: "Skill Gap", icon: ChartNoAxesCombined, href: "#skill-gap" },
+  { label: "CV Check", icon: FileCheck2, href: "#cv-check" },
+  { label: "Assistant", icon: FileCheck2, href: "#assistant" },
+  { label: "Profile", icon: UserRound, href: "#profile" },
+  { label: "AI Insights", icon: KeyRound, href: "#ai-insights" },
 ];
 
-const applications = [
-  {
-    company: "Zalando SE",
-    role: "Frontend Working Student",
-    location: "Berlin · Hybrid",
-    meta: "Applied 2d ago",
-    status: "In review",
-    dot: "bg-[#C77D2E]",
-    image:
-      "linear-gradient(135deg, rgba(44,123,229,0.22), rgba(18,23,32,0.95)), radial-gradient(circle at 22% 30%, rgba(255,255,255,0.18), transparent 22%), linear-gradient(45deg, #1d2531 0 25%, #273244 25% 50%, #1d2531 50% 75%, #273244 75%)",
-  },
-  {
-    company: "N26",
-    role: "Junior Web Developer",
-    location: "Berlin · Remote",
-    meta: "Interview 5d",
-    status: "Invited",
-    dot: "bg-[#9bb99b]",
-    image:
-      "linear-gradient(135deg, rgba(91,69,255,0.25), rgba(18,23,32,0.95)), radial-gradient(circle at 60% 45%, rgba(44,123,229,0.42), transparent 20%), linear-gradient(135deg, #202735, #303849)",
-  },
-  {
-    company: "SAP",
-    role: "UI/UX Working Student",
-    location: "Walldorf · On-site",
-    meta: "Draft",
-    status: "Saved",
-    dot: "bg-white/20",
-    image:
-      "linear-gradient(135deg, rgba(255,255,255,0.08), rgba(18,23,32,0.95)), radial-gradient(circle at 70% 30%, rgba(255,255,255,0.16), transparent 24%), linear-gradient(155deg, #222a36, #11161f)",
-  },
-];
+type DashboardApplicationCard = {
+  company: string;
+  role: string;
+  location: string;
+  meta: string;
+  status: string;
+  dot: string;
+  image: string;
+};
 
-const proofCards = [
-  { mark: "B2", title: "German B2", issuer: "Goethe-Institut" },
-  { mark: "R", title: "React Project", issuer: "GitHub proof" },
-];
+type ApplicationRecord = {
+  id: string;
+  company: string;
+  role: string;
+  location: string | null;
+  url: string | null;
+  status: "saved" | "applied" | "interview" | "rejected" | "offer";
+  follow_up_date: string | null;
+  job_description: string | null;
+  notes: string | null;
+  created_at: string;
+};
 
-export default function DashboardPage() {
+type EvidenceRecord = {
+  application_id: string | null;
+  skill: string;
+  evidence_summary: string | null;
+  confidence: "direct" | "bridge" | "basic" | "learning" | "missing";
+  proof_url: string | null;
+};
+
+type WorkHourRecord = WorkHourLog;
+
+type AiProviderSettingRecord = {
+  provider: AiProvider;
+  key_hint: string | null;
+  enabled: boolean;
+};
+
+type UserProfileRecord = UserProfileData;
+
+export default async function DashboardPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/");
+  }
+
+  const metadataFullName =
+    typeof user.user_metadata.full_name === "string" && user.user_metadata.full_name
+      ? user.user_metadata.full_name
+      : null;
+  const metadataTargetRole =
+    typeof user.user_metadata.target_role === "string" && user.user_metadata.target_role
+      ? user.user_metadata.target_role
+      : null;
+  const { data: userProfile, error: userProfileError } = await supabase
+    .from("user_profiles")
+    .select("full_name, current_city, work_authorization, languages, target_roles, profile_note")
+    .eq("user_id", user.id)
+    .maybeSingle<UserProfileRecord>();
+  const profile: UserProfileData = {
+    current_city: userProfile?.current_city ?? null,
+    full_name: userProfile?.full_name ?? metadataFullName,
+    languages: userProfile?.languages ?? [],
+    profile_note: userProfile?.profile_note ?? null,
+    target_roles:
+      userProfile?.target_roles && userProfile.target_roles.length > 0
+        ? userProfile.target_roles
+        : metadataTargetRole
+          ? [metadataTargetRole]
+          : [],
+    work_authorization: userProfile?.work_authorization ?? "unknown",
+  };
+  const fullName = profile.full_name || "CareerOS User";
+  const targetRole = profile.target_roles[0] || "International Student";
+  const profileReadiness = calculateProfileReadiness(profile);
+  const initials = fullName
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+  const { data: storedApplications, error: applicationsError } = await supabase
+    .from("applications")
+    .select("id, company, role, location, url, status, follow_up_date, job_description, notes, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .returns<ApplicationRecord[]>();
+  const applicationIds = (storedApplications ?? []).map((application) => application.id);
+  const { data: storedEvidence, error: evidenceError } =
+    applicationIds.length > 0
+      ? await supabase
+          .from("evidence_items")
+          .select("application_id, skill, evidence_summary, confidence, proof_url")
+          .eq("user_id", user.id)
+          .in("application_id", applicationIds)
+          .returns<EvidenceRecord[]>()
+      : { data: [] as EvidenceRecord[], error: null };
+  const yearRange = getYearRange();
+  const { data: workHourLogs, error: workHourLogsError } = await supabase
+    .from("work_hour_logs")
+    .select("id, work_date, employer, hours, day_type, notes")
+    .eq("user_id", user.id)
+    .gte("work_date", yearRange.start)
+    .lte("work_date", yearRange.end)
+    .order("work_date", { ascending: false })
+    .returns<WorkHourRecord[]>();
+  const { data: aiProviderSettings, error: aiProviderSettingsError } = await supabase
+    .from("ai_provider_settings")
+    .select("provider, key_hint, enabled")
+    .eq("user_id", user.id)
+    .eq("enabled", true)
+    .returns<AiProviderSettingRecord[]>();
+  const analytics = calculateDashboardAnalytics({
+    applications: storedApplications ?? [],
+    evidence: storedEvidence ?? [],
+  });
+  const dashboardApplications: DashboardApplicationCard[] = (storedApplications ?? []).map(
+    (application) => ({
+      company: application.company,
+      role: application.role,
+      location: application.location || "Location not set",
+      meta: application.follow_up_date
+        ? `Follow up ${application.follow_up_date}`
+        : application.status.charAt(0).toUpperCase() + application.status.slice(1),
+      status: application.status,
+      dot:
+        application.status === "interview"
+          ? "bg-[#9bb99b]"
+          : application.status === "rejected"
+            ? "bg-[#C77D2E]"
+            : application.status === "offer"
+              ? "bg-[#5C7A5C]"
+              : "bg-[#C77D2E]",
+      image:
+        "linear-gradient(135deg, rgba(44,123,229,0.18), rgba(18,23,32,0.95)), radial-gradient(circle at 22% 30%, rgba(255,255,255,0.14), transparent 22%), linear-gradient(45deg, #1d2531 0 25%, #273244 25% 50%, #1d2531 50% 75%, #273244 75%)",
+    }),
+  );
+
   return (
     <main className="h-[100dvh] overflow-hidden bg-[#171A1F] text-[#F7F8F6]">
-      <section className="dashboard-frame grid h-full overflow-hidden lg:grid-cols-[236px_minmax(0,1fr)_392px]">
+      <section className="dashboard-frame grid h-full overflow-hidden lg:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="hidden min-h-0 flex-col bg-[#262B34] px-5 py-8 lg:flex">
-          <div className="mb-12 px-3 font-serif text-xl font-medium tracking-[-0.01em]">
+          <div className="mb-8 px-3 font-serif text-xl font-medium tracking-[-0.01em]">
             <span className="text-[#2C7BE5]">C</span>
             <span className="text-white">.os</span>
+          </div>
+
+          <div className="mb-7 rounded-[22px] border border-white/10 bg-white/[0.04] p-4">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="grid h-12 w-12 place-items-center rounded-full border-2 border-white bg-[#D9DEE8] text-base font-semibold text-[#171A1F]">
+                {initials}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate font-serif text-lg font-normal tracking-[-0.01em]">
+                  {fullName}
+                </p>
+                <p className="truncate text-xs text-white/52">
+                  {targetRole}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-2xl bg-[#171A1F] px-3 py-2">
+              <span className="text-xs text-white/56">Profile readiness</span>
+              <span className="font-serif text-xl leading-none text-white">
+                {profileReadiness}%
+              </span>
+            </div>
           </div>
 
           <nav className="flex flex-1 flex-col gap-3">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
-                <button
+                <a
                   aria-label={item.label}
-                  className={`flex h-12 items-center gap-3 rounded-2xl px-3 text-sm font-medium transition ${
-                    item.active
-                      ? "bg-white/10 text-white shadow-inner"
-                      : "text-white/64 hover:bg-white/5 hover:text-white"
-                  }`}
+                  className="flex h-12 items-center gap-3 rounded-2xl px-3 text-sm font-medium text-white/64 transition hover:bg-white/5 hover:text-white focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-none"
+                  href={item.href}
                   key={item.label}
-                  type="button"
                 >
                   <Icon size={22} strokeWidth={1.8} />
                   <span>{item.label}</span>
-                </button>
+                </a>
               );
             })}
           </nav>
 
-          <button
-            aria-label="Logout"
-            className="flex h-12 items-center gap-3 rounded-2xl px-3 text-sm font-medium text-white/64 transition hover:bg-white/5 hover:text-white"
-            type="button"
-          >
-            <LogOut size={22} strokeWidth={1.8} />
-            <span>Logout</span>
-          </button>
+          <SignOutButton />
         </aside>
 
-        <section className="min-h-0 min-w-0 overflow-hidden bg-[#171A1F] px-6 py-5 md:px-9 lg:px-10 lg:py-6">
-          <header className="mb-5 flex items-center justify-between gap-6">
-            <label className="flex h-12 w-full max-w-[430px] items-center gap-3 rounded-xl border border-white/10 bg-[#222833] px-5 text-[#AEB6C2]">
+        <section className="min-h-0 min-w-0 overflow-y-auto bg-[#171A1F] px-6 py-4 md:px-8 lg:px-9 lg:py-5">
+          <header className="mb-4 flex items-center justify-between gap-6">
+            <a
+              className="flex h-12 w-full max-w-[430px] items-center gap-3 rounded-xl border border-white/10 bg-[#222833] px-5 text-[#AEB6C2] transition hover:border-white/20 hover:text-white"
+              href="#applications"
+              title="Search applications"
+            >
               <Search size={21} strokeWidth={1.7} />
-              <input
-                className="w-full bg-transparent text-base outline-none placeholder:text-[#AEB6C2]"
-                placeholder="Search"
-                type="text"
-              />
-            </label>
+              <span className="text-base">Search applications</span>
+            </a>
 
             <div className="hidden items-center gap-5 text-white/82 md:flex">
               <Bell size={23} strokeWidth={1.7} />
@@ -118,104 +253,94 @@ export default function DashboardPage() {
             </div>
           </header>
 
-          <section className="mb-6 rounded-[20px] bg-[#252B36] p-5 shadow-dashboard-card md:p-5">
-            <div className="mb-4 flex items-center justify-between">
+          <nav
+            aria-label="Dashboard modules"
+            className="dashboard-module-nav mb-4 flex gap-2 overflow-x-auto rounded-[18px] border border-white/10 bg-[#222833]/82 p-2 lg:hidden"
+          >
+            {navItems.map((item) => (
+              <a
+                className="shrink-0 rounded-xl px-3 py-2 text-xs font-semibold text-white/68 transition hover:bg-white/[0.06] hover:text-white focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-none"
+                href={item.href}
+                key={item.href}
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
+
+          <section
+            className="mb-5 scroll-mt-5 rounded-[20px] bg-[#252B36] p-4 shadow-dashboard-card md:p-5"
+            id="overview"
+          >
+            <div className="mb-3 flex items-center justify-between">
               <h1 className="font-serif text-[clamp(2rem,4vw,3.2rem)] font-normal leading-none tracking-[-0.01em]">
                 CareerOS Control
               </h1>
-              <button
+              <a
                 className="hidden items-center gap-2 rounded-xl px-4 py-3 text-lg font-medium text-white/85 transition hover:bg-white/5 md:flex"
-                type="button"
+                href="#analytics"
               >
                 Details <span className="text-2xl leading-none">›</span>
-              </button>
+              </a>
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_0.56fr_0.56fr]">
-              <article className="relative min-h-[190px] overflow-hidden rounded-[22px] bg-[#2C7BE5] p-6 shadow-soft-blue">
-                <div className="mb-5 flex items-center gap-5 text-sm uppercase tracking-wide text-white/80">
-                  <span>Work hour permit</span>
-                  <span className="h-px w-16 bg-white/55" />
-                  <span>Week 42</span>
-                </div>
-
-                <div className="mb-5 flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="mb-2 font-serif text-[clamp(2rem,3.2vw,3.4rem)] font-normal leading-[0.95] tracking-[-0.01em]">
-                      12 / 20 hrs
-                    </h2>
-                    <p className="text-lg text-white/78">Student work allowance</p>
-                  </div>
-                  <span className="stamp rounded-full px-4 py-2 text-xs font-semibold uppercase text-white/90">
-                    Compliant
-                  </span>
-                </div>
-
-                <div className="flex items-end justify-between gap-5">
-                  <div className="flex -space-x-3">
-                    {["32", "64", "B2"].map((value) => (
-                      <span
-                        className="grid h-11 w-11 place-items-center rounded-full border-2 border-[#2C7BE5] bg-white text-sm font-semibold text-[#171A1F]"
-                        key={value}
-                      >
-                        {value}
-                      </span>
-                    ))}
-                    <span className="grid h-11 w-11 place-items-center rounded-full border-2 border-[#2C7BE5] bg-[#171A1F] text-xs text-white">
-                      +4
-                    </span>
-                  </div>
-
-                  <button
-                    className="rounded-xl px-3 py-2 text-xl font-medium text-white transition hover:bg-white/10"
-                    type="button"
-                  >
-                    Log hours ›
-                  </button>
-                </div>
-              </article>
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1.55fr)_0.56fr_0.56fr]">
+              <div id="work-hours" className="scroll-mt-5">
+                <WorkHoursPermit
+                  logs={workHourLogs ?? []}
+                  tableReady={!workHourLogsError}
+                  userId={user.id}
+                />
+              </div>
 
               <MiniStatusCard
                 label="Next follow-up"
-                title="2 days"
-                value="Zalando"
+                title={analytics.nextFollowUpLabel}
+                value={analytics.nextFollowUpCompany}
               />
               <MiniStatusCard
-                label="CV readability"
-                title="84%"
-                value="Inspection passed"
+                label="Response rate"
+                title={`${analytics.responseRate}%`}
+                value={`${analytics.totalApplications} applications`}
               />
             </div>
           </section>
 
-          <section>
-            <div className="mb-5 flex items-center justify-between">
+          <section className="scroll-mt-5" id="activity">
+            <div className="mb-4 flex items-center justify-between">
               <h2 className="font-serif text-[clamp(1.7rem,3vw,2.55rem)] font-normal leading-none tracking-[-0.01em]">
                 Applications in motion
               </h2>
-              <button
+              <a
                 aria-label="Filter applications"
-                className="grid h-14 w-14 place-items-center rounded-2xl border border-white/10 bg-[#252B36] text-white/85 transition hover:bg-[#303849]"
-                type="button"
+                className="grid h-12 w-12 place-items-center rounded-2xl border border-white/10 bg-[#252B36] text-white/85 transition hover:bg-[#303849]"
+                href="#applications"
+                title="Open application filters"
               >
                 <SlidersHorizontal size={22} strokeWidth={1.8} />
-              </button>
+              </a>
             </div>
 
-            <div className="grid gap-6 xl:grid-cols-[1fr_1fr_1.38fr]">
-              {applications.slice(0, 2).map((application) => (
-                <ApplicationCard application={application} key={application.company} />
-              ))}
+            <div className="grid gap-4 xl:grid-cols-[1fr_1fr_1.25fr]">
+              {dashboardApplications.length > 0 ? (
+                dashboardApplications
+                  .slice(0, 2)
+                  .map((application) => (
+                    <ApplicationCard application={application} key={application.company} />
+                  ))
+              ) : (
+                <EmptyApplicationsCard />
+              )}
 
-              <article className="card-sheen min-h-[240px] rounded-[22px] p-5">
+              <article className="card-sheen rounded-[22px] p-4">
                 <p className="mb-3 text-center text-lg font-medium text-white/90">
-                  Skill gap trend
+                  Skill gap grade
                 </p>
                 <div className="mb-3 text-center text-5xl font-light tracking-[-0.05em] text-[#2C7BE5]">
-                  B+
+                  {analytics.skillGapGrade}
                 </div>
 
-                <div className="relative mx-auto mb-4 h-20 max-w-[280px]">
+                <div className="relative mx-auto mb-3 h-16 max-w-[280px]">
                   <svg
                     aria-hidden="true"
                     className="h-full w-full overflow-visible"
@@ -245,92 +370,119 @@ export default function DashboardPage() {
                   </svg>
                 </div>
 
-                <div className="flex justify-center gap-7 text-sm text-[#AEB6C2]">
-                  <span>
-                    <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#EC43A3]" />
-                    React
-                  </span>
-                  <span>
-                    <span className="mr-2 inline-block h-2 w-2 rounded-full bg-white/80" />
-                    German B2
-                  </span>
+                <div className="flex flex-wrap justify-center gap-3 text-sm text-[#AEB6C2]">
+                  {(analytics.mostMissingSkills.length > 0
+                    ? analytics.mostMissingSkills.slice(0, 2)
+                    : analytics.mostRequestedSkills.slice(0, 2)
+                  ).map((item, index) => (
+                    <span key={item.skill}>
+                      <span
+                        className={`mr-2 inline-block h-2 w-2 rounded-full ${
+                          index === 0 ? "bg-[#EC43A3]" : "bg-white/80"
+                        }`}
+                      />
+                      {item.skill}
+                    </span>
+                  ))}
                 </div>
               </article>
             </div>
           </section>
+
+          <div className="scroll-mt-5" id="analytics">
+            <DashboardAnalyticsPanel analytics={analytics} />
+          </div>
+
+          <section className="scroll-mt-5" id="applications">
+            <AddApplicationForm userId={user.id} />
+
+            <ApplicationManagementPanel
+              applications={(storedApplications ?? []).map(
+                (application): ManagedApplication => ({
+                  id: application.id,
+                  company: application.company,
+                  created_at: application.created_at,
+                  follow_up_date: application.follow_up_date,
+                  location: application.location,
+                  notes: application.notes,
+                  role: application.role,
+                  status: application.status,
+                  url: application.url,
+                }),
+              )}
+              tableReady={!applicationsError}
+            />
+
+            {applicationsError && (
+              <div className="mb-5 rounded-[22px] border border-[#C77D2E]/40 bg-[#C77D2E]/12 px-4 py-3 text-sm leading-6 text-[#FFD8B0]">
+                Supabase table is not ready yet. Run{" "}
+                <code className="rounded bg-black/20 px-1.5 py-1">supabase/schema.sql</code>{" "}
+                in the Supabase SQL editor to enable saved applications.
+              </div>
+            )}
+          </section>
+
+          <section className="scroll-mt-5" id="skill-gap">
+            <JdEvidenceWorkspace
+              aiSettings={aiProviderSettings ?? []}
+              applications={(storedApplications ?? []).map((application) => ({
+                id: application.id,
+                company: application.company,
+                role: application.role,
+                job_description: application.job_description,
+              }))}
+              evidenceTableReady={!evidenceError}
+              initialEvidence={storedEvidence ?? []}
+              userId={user.id}
+            />
+          </section>
+
+          <section className="scroll-mt-5" id="cv-check">
+            <CvCheckPanel
+              aiSettings={aiProviderSettings ?? []}
+              applications={(storedApplications ?? []).map((application) => ({
+                id: application.id,
+                company: application.company,
+                role: application.role,
+                job_description: application.job_description,
+              }))}
+            />
+          </section>
+
+          <section className="scroll-mt-5" id="assistant">
+            <ApplicationAssistantPanel
+              applications={(storedApplications ?? []).map((application) => ({
+                id: application.id,
+                company: application.company,
+                role: application.role,
+                job_description: application.job_description,
+              }))}
+              evidence={(storedEvidence ?? []).map((item) => ({
+                application_id: item.application_id,
+                skill: item.skill,
+                evidence_summary: item.evidence_summary,
+                confidence: item.confidence,
+                proof_url: item.proof_url,
+              }))}
+            />
+          </section>
+
+          <section className="scroll-mt-5" id="profile">
+            <ProfileSettingsPanel
+              initialProfile={profile}
+              tableReady={!userProfileError}
+              userId={user.id}
+            />
+          </section>
+
+          <section className="scroll-mt-5" id="ai-insights">
+            <AiSettingsPanel
+              initialSettings={aiProviderSettings ?? []}
+              tableReady={!aiProviderSettingsError}
+            />
+          </section>
         </section>
 
-        <aside className="right-panel-glow hidden min-h-0 flex-col px-10 py-6 lg:flex">
-          <div className="mb-7 flex justify-end">
-            <Bell size={25} strokeWidth={1.7} />
-          </div>
-
-          <div className="mb-6 flex flex-col items-center text-center">
-            <div className="relative mb-6">
-              <div className="grid h-24 w-24 place-items-center rounded-full border-[5px] border-white bg-[#D9DEE8] text-4xl font-semibold text-[#171A1F] shadow-dashboard-card">
-                UQ
-              </div>
-              <span className="absolute bottom-2 right-0 grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-[#2C7BE5] text-sm font-semibold">
-                5
-              </span>
-            </div>
-            <h2 className="mb-2 font-serif text-2xl font-normal tracking-[-0.01em]">
-              Uzair Qureshi
-            </h2>
-            <p className="text-lg text-white/66">International Student · Web Track</p>
-          </div>
-
-          <div className="h-px bg-white/20" />
-
-          <section className="py-6 text-center">
-            <p className="mb-5 text-lg text-white/86">Profile readiness</p>
-            <div className="mb-6 flex items-end justify-center gap-2">
-              <span className="pb-5 text-3xl text-[#C8D6FF]">%</span>
-              <span className="text-[5.8rem] font-light leading-[0.75] tracking-[-0.08em]">
-                85
-              </span>
-            </div>
-            <button
-              className="rounded-2xl bg-[#303849] px-9 py-4 text-base font-medium text-white shadow-dashboard-card transition hover:bg-[#3a4354]"
-              type="button"
-            >
-              Update profile ›
-            </button>
-          </section>
-
-          <div className="h-px bg-white/20" />
-
-          <section className="min-w-0 flex-1 py-6">
-            <h3 className="mb-5 font-serif text-xl font-normal">Proof certificates</h3>
-            <div className="grid grid-cols-2 gap-4 overflow-hidden">
-              {proofCards.map((card) => (
-                <article
-                  className="min-w-0 rounded-2xl bg-[#F7F8F6] p-4 text-[#171A1F]"
-                  key={card.title}
-                >
-                  <div className="mb-4 flex items-start justify-between">
-                    <span className="text-3xl font-semibold text-[#2C7BE5]">
-                      {card.mark}
-                    </span>
-                    <span className="text-2xl text-[#AEB6C2]">⋮</span>
-                  </div>
-                  <p className="mb-1 truncate text-base font-semibold">{card.title}</p>
-                  <p className="text-sm text-[#6D737D]">{card.issuer}</p>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <div className="flex justify-center">
-            <button
-              aria-label="Settings"
-              className="grid h-14 w-14 place-items-center rounded-2xl bg-[#303849] shadow-dashboard-card transition hover:bg-[#3a4354]"
-              type="button"
-            >
-              <Settings size={22} strokeWidth={1.8} />
-            </button>
-          </div>
-        </aside>
       </section>
     </main>
   );
@@ -346,13 +498,13 @@ function MiniStatusCard({
   value: string;
 }) {
   return (
-    <article className="rounded-[22px] border border-white/10 bg-[#303849] p-6">
-      <div className="mb-7 grid h-11 w-11 place-items-center rounded-full bg-white/5 text-white/75">
+    <article className="h-full rounded-[22px] border border-white/10 bg-[#303849] p-5">
+      <div className="mb-5 grid h-10 w-10 place-items-center rounded-full bg-white/5 text-white/75">
         <ShieldCheck size={21} strokeWidth={1.8} />
       </div>
-      <p className="mb-3 text-xl font-medium tracking-[-0.02em]">{title}</p>
-      <p className="text-base leading-5 text-[#AEB6C2]">{label}</p>
-      <p className="text-base leading-5 text-[#AEB6C2]">{value}</p>
+      <p className="mb-2 text-xl font-medium tracking-[-0.02em]">{title}</p>
+      <p className="text-sm leading-5 text-[#AEB6C2]">{label}</p>
+      <p className="text-sm leading-5 text-[#AEB6C2]">{value}</p>
     </article>
   );
 }
@@ -360,29 +512,53 @@ function MiniStatusCard({
 function ApplicationCard({
   application,
 }: {
-  application: (typeof applications)[number];
+  application: DashboardApplicationCard;
 }) {
   return (
     <article className="overflow-hidden rounded-[22px] bg-[#303849] shadow-dashboard-card">
       <div
-        className="h-24 p-5"
+        className="h-20 p-4"
         style={{ background: application.image }}
       >
-        <span className="rounded-lg border border-white/15 bg-[#202733]/90 px-4 py-2 text-sm font-medium text-white">
+        <span className="rounded-lg border border-white/15 bg-[#202733]/90 px-3 py-1.5 text-sm font-medium text-white">
           {application.company}
         </span>
       </div>
-      <div className="p-5">
+      <div className="p-4">
         <p className="mb-2 text-base text-[#C9D4E2]">{application.role}</p>
-        <h3 className="mb-4 font-serif text-xl font-normal tracking-[-0.01em]">
+        <h3 className="mb-3 font-serif text-xl font-normal tracking-[-0.01em]">
           {application.location}
         </h3>
         <div className="mb-3 h-px bg-white/12" />
-        <div className="flex items-center justify-between text-base text-[#AEB6C2]">
+        <div className="flex items-center justify-between text-sm text-[#AEB6C2]">
           <span>{application.meta}</span>
           <span className={`h-3 w-3 rounded-full ${application.dot}`} />
         </div>
       </div>
+    </article>
+  );
+}
+
+function EmptyApplicationsCard() {
+  return (
+    <article className="card-sheen flex min-h-[238px] flex-col justify-between rounded-[22px] p-5 xl:col-span-2">
+      <div>
+        <p className="mb-3 font-mono text-xs uppercase tracking-[0.14em] text-[#AEB6C2]">
+          No applications yet
+        </p>
+        <h3 className="font-serif text-3xl font-normal leading-none tracking-[-0.01em]">
+          Start with one real job.
+        </h3>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-[#AEB6C2]">
+          Add a job description to unlock the evidence map, fit signals, and follow-up workflow.
+        </p>
+      </div>
+      <a
+        className="mt-6 inline-flex min-h-11 w-fit items-center gap-2 rounded-xl border border-white/12 bg-white/[0.06] px-4 text-sm font-semibold text-white/82 transition hover:border-white/24 hover:bg-white/[0.09]"
+        href="#applications"
+      >
+        Add your first job <span className="text-lg leading-none">→</span>
+      </a>
     </article>
   );
 }

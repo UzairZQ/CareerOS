@@ -1,5 +1,27 @@
 # CareerOS Germany - Implementation Plan
 
+## Current Implementation Status (2026-07-10)
+
+The first production-oriented vertical slice is implemented in the repository:
+
+- Next.js App Router with React and TypeScript is the confirmed framework choice.
+- Supabase Auth, PostgreSQL tables, and RLS are connected.
+- The protected dashboard contains applications, work hours, JD analysis, Evidence Map, learning sprints, CV check, Application Assistant, profile settings, and optional BYOK AI Insights.
+- CV Check accepts selectable-text PDFs up to 5 MB and extracts their text locally with `pdfjs-dist`.
+- Empty accounts receive honest empty states across CV Check, Skill Gap, and Application Assistant; sample user/job content is not shown as real data.
+- Dashboard analytics counts only proof-backed evidence, and application summaries are not silently capped at 20 records.
+- OAuth callback navigation and optional AI request bodies are validated against malicious or malformed input.
+- The base product is rule-based and works without AI.
+- Automated verification covers unit validation, real Supabase integration, authenticated browser workflows, responsive runtime inspection, production build, lint, and dependency audit.
+
+Remaining external setup is intentionally separate from application code:
+
+- Enable Google in Supabase Auth and add the Google OAuth client credentials if Google sign-in is desired.
+- Add Vercel project/environment variables before deployment.
+
+The proof-link migration has been applied to the connected Supabase project and
+verified by the live integration suite.
+
 ## What This Project Is
 
 CareerOS Germany is a web platform for international students in Germany, starting with Werkstudent and early-career job seekers.
@@ -30,7 +52,7 @@ It should not be positioned as:
 
 > A ChatGPT wrapper or fake CV generator.
 
-The app should work without paid AI. Any AI integration should be optional later.
+The app works without paid AI. AI Insights is implemented as an optional BYOK layer.
 
 The default project AI provider, when AI is enabled, is Gemini. Users can bring their own API key. No platform-wide paid AI key is required for the base product.
 
@@ -100,8 +122,9 @@ Learning goals:
 
 ### 4. ATS Checker
 
-- Upload a CV PDF.
-- Extract raw text client-side using pdf.js.
+- Paste plain CV text or upload a selectable-text PDF up to 5 MB.
+- PDF text extraction runs locally in the browser; the file is not stored or sent to an AI provider by default.
+- Scanned/image-only PDFs receive a clear fallback message because OCR is intentionally outside this MVP.
 - Show the user exactly what a machine can read.
 - Run rule-based checks:
   - email detected
@@ -139,9 +162,9 @@ Key handling rules:
 - The key is never shown to other users.
 - The key is never logged.
 - The key is never stored in client-side JavaScript.
-- The key is sent from the settings form to a backend function over HTTPS.
+- The key is sent from the settings form to an authenticated Next.js server route over HTTPS.
 - The backend function encrypts the key before storing it in Supabase.
-- AI calls are made through a Supabase Edge Function, not directly from the browser.
+- AI calls are made through the authenticated server route, not directly from the browser.
 
 After a key is added:
 
@@ -209,17 +232,12 @@ Optional later AI:
 
 ## Tech Stack
 
-Decision to confirm before implementation:
-
-- If the priority is learning React fundamentals first: use Vite + React Router.
-- If the priority is portfolio/job-market signaling for web roles: use Next.js App Router.
-
-Current recommended direction:
+Confirmed implementation:
 
 - Frontend: React.
-- Framework/routing: to be finalized before milestone 1.
+- Framework and routing: Next.js App Router.
 - Language: TypeScript.
-- Styling: Tailwind CSS + shadcn/ui.
+- Styling: Tailwind CSS with custom components; shadcn/ui remains optional and is not currently installed.
 - Backend/database/auth: Supabase.
 - Database: PostgreSQL through Supabase.
 - Validation: Zod.
@@ -227,8 +245,8 @@ Current recommended direction:
 - Charts: Recharts.
 - ATS parsing: pdf.js.
 - Optional AI: Gemini first, with Groq and OpenRouter as Bring Your Own Key alternatives.
-- AI backend: Supabase Edge Function, not browser-side API calls.
-- Hosting: Vercel or Netlify for frontend, Supabase cloud for backend.
+- AI backend: authenticated Next.js server routes, not browser-side API calls.
+- Hosting target: Vercel for the Next.js app, Supabase cloud for backend services.
 
 Important clarification:
 
@@ -253,17 +271,10 @@ The goal is not just that CareerOS works. The goal is that the user can explain,
 
 ## Suggested Build Order
 
-1. Finalize milestone 1 requirements.
-2. Choose framework: Vite + React Router or Next.js App Router.
-3. Set up project skeleton.
-4. Build auth and profile.
-5. Build dashboard shell.
-6. Build job application tracker.
-7. Build hour tracker.
-8. Add charts and summaries.
-9. Build ATS checker.
-10. Build skill gap analyzer.
-11. Build optional AI Insights with Bring Your Own Key only after ATS and skill-gap data already work without AI.
+1. Configure Google OAuth in Supabase if required.
+2. Add Vercel environment variables and deploy a preview.
+3. Add richer charts and active-section navigation where they improve daily use.
+4. Keep expanding authenticated E2E coverage as new workflows are added.
 
 ## Milestone 1 Direction
 
@@ -299,8 +310,8 @@ Possible CV/interview wording after implementation:
 - Groq and OpenRouter are planned as additional Bring Your Own Key provider options.
 - User AI keys must be stored encrypted and used only through backend functions.
 - Supabase means hosted PostgreSQL plus Auth, not a separate database choice.
+- Next.js App Router is the confirmed framework alongside React.
 - The product should focus on practical student workflows, not a generic landing page.
-- We will create `milestone-1.md` only after discussing and locking the first milestone.
 
 ## Sources To Verify During Build
 
