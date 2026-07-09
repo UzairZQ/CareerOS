@@ -10,6 +10,7 @@ The first production-oriented vertical slice is implemented in the repository:
 - CV Check accepts selectable-text PDFs up to 5 MB and extracts their text locally with `pdfjs-dist`.
 - Empty accounts receive honest empty states across CV Check, Skill Gap, and Application Assistant; sample user/job content is not shown as real data.
 - Dashboard analytics counts only proof-backed evidence, and application summaries are not silently capped at 20 records.
+- Evidence Map proof saves refresh the server-rendered analytics so evidence progress is visible immediately.
 - OAuth callback navigation and optional AI request bodies are validated against malicious or malformed input.
 - The base product is rule-based and works without AI.
 - Automated verification covers unit validation, real Supabase integration, authenticated browser workflows, responsive runtime inspection, production build, lint, and dependency audit.

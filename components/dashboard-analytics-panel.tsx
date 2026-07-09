@@ -35,6 +35,7 @@ export function DashboardAnalyticsPanel({ analytics }: { analytics: DashboardAna
             detail="Interview, offer, or rejection"
           />
           <AnalyticsMetric
+            dataTestId="analytics-evidence-ready"
             icon={<FileCheck2 size={18} strokeWidth={1.8} />}
             label="Evidence ready"
             value={String(analytics.cvReadyEvidenceCount)}
@@ -103,11 +104,13 @@ export function DashboardAnalyticsPanel({ analytics }: { analytics: DashboardAna
 
 function AnalyticsMetric({
   detail,
+  dataTestId,
   icon,
   label,
   value,
 }: {
   detail: string;
+  dataTestId?: string;
   icon: React.ReactNode;
   label: string;
   value: string;
@@ -118,7 +121,9 @@ function AnalyticsMetric({
         {icon}
         {label}
       </p>
-      <p className="font-serif text-4xl leading-none">{value}</p>
+      <p className="font-serif text-4xl leading-none" data-testid={dataTestId}>
+        {value}
+      </p>
       <p className="mt-2 text-sm text-[#AEB6C2]">{detail}</p>
     </div>
   );

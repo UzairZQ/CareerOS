@@ -218,6 +218,8 @@ test.describe("authenticated dashboard UI", () => {
       .fill("https://github.com/example/careeros-e2e");
     await page.getByTestId("evidence-save-react").click();
     await expect(page.getByTestId("evidence-save-react")).toHaveText("Saved");
+    await page.getByRole("link", { exact: true, name: "Overview" }).click();
+    await expect(page.getByTestId("analytics-evidence-ready")).toHaveText("1");
 
     const { data: evidence, error: evidenceError } = await admin
       .from("evidence_items")

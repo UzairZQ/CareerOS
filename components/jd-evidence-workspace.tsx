@@ -8,6 +8,7 @@ import {
   Save,
   ShieldCheck,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AiInsightButton, type AiProviderSettingSummary } from "@/components/ai-insight-button";
 import {
@@ -75,6 +76,7 @@ export function JdEvidenceWorkspace({
   initialEvidence: InitialEvidenceItem[];
   userId: string;
 }) {
+  const router = useRouter();
   const firstApplicationWithJd = applications.find((application) => application.job_description);
   const [selectedApplicationId, setSelectedApplicationId] = useState(firstApplicationWithJd?.id ?? "manual");
   const selectedApplication = applications.find((application) => application.id === selectedApplicationId);
@@ -207,7 +209,10 @@ export function JdEvidenceWorkspace({
     setSaveStateBySkill((current) => ({ ...current, [skill.skill]: error ? "error" : "saved" }));
     if (error) {
       setErrorBySkill((current) => ({ ...current, [skill.skill]: error.message }));
+      return;
     }
+
+    router.refresh();
   }
 
   return (

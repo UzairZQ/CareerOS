@@ -302,6 +302,9 @@ Fields submitted:
 
 After insert, the form calls `router.refresh()` so server-rendered application data updates.
 
+Evidence Map saves also call `router.refresh()` so dashboard evidence coverage
+updates immediately after proof is saved.
+
 ## Design Preferences And Decisions
 
 User preferences discovered during iteration:
@@ -480,6 +483,8 @@ Verified across 2026-07-09 and 2026-07-10:
   into the ATS analyzer without a server upload.
 - The empty-module E2E assertions prove CV Check, Skill Gap, and Assistant do
   not fabricate sample content for a new account.
+- The authenticated E2E assertion proves Evidence Map proof saves update the
+  dashboard's live Evidence ready metric without a full-page reload.
 - Playwright runs with one worker to avoid creating concurrent confirmation-email requests against Supabase's provider quota.
 
 The dashboard is intentionally a long, scrollable work surface: the outer page stays fixed to the viewport while the main dashboard column scrolls through all modules. This is required so users can reach the complete application rather than clipping the lower modules.
