@@ -36,6 +36,7 @@ CareerOS/
     work-hours.ts
     user-profile.ts
     ai-providers.ts
+    auth-errors.ts
     auth-navigation.ts
     supabase/
     server/secret-crypto.ts

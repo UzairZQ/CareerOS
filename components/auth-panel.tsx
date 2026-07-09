@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type React from "react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { createClient } from "@/lib/supabase/browser";
+import { formatAuthError } from "@/lib/auth-errors";
 
 type AuthMode = "login" | "signup";
 
@@ -66,7 +67,7 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
       });
 
       if (signInError) {
-        setError(signInError.message);
+        setError(formatAuthError(signInError.message));
         setStatus("idle");
         return;
       }
@@ -99,7 +100,7 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
     });
 
     if (signUpError) {
-      setError(signUpError.message);
+      setError(formatAuthError(signUpError.message));
       setStatus("idle");
       return;
     }
@@ -129,7 +130,7 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
     });
 
     if (resetError) {
-      setError(resetError.message);
+      setError(formatAuthError(resetError.message));
       return;
     }
 
@@ -149,7 +150,7 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
     });
 
     if (googleError) {
-      setError(googleError.message);
+      setError(formatAuthError(googleError.message));
     }
   }
 

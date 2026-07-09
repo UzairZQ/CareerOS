@@ -34,7 +34,7 @@ test.describe("public auth flow", () => {
   let admin: SupabaseClient;
   let createdUserId: string | undefined;
   const runId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const email = `careeros-signup-${runId}@example.com`;
+  const email = `careeros.signup.${runId}@gmail.com`;
   const password = `CareerOS-${runId}!Aa1`;
 
   test.beforeAll(() => {
@@ -79,6 +79,10 @@ test.describe("public auth flow", () => {
       "Check your email to confirm your account, then log in.",
       { exact: true },
     );
+    const rateLimitMessage = page.getByText(
+      "Too many confirmation emails were requested. Please wait a few minutes and try again.",
+      { exact: true },
+    );
     const dashboardHeading = page.getByRole("heading", { exact: true, name: "CareerOS Control" });
     const outcome = await Promise.race([
       confirmationMessage
@@ -89,7 +93,14 @@ test.describe("public auth flow", () => {
         .waitFor({ state: "visible", timeout: 10_000 })
         .then(() => "dashboard")
         .catch(() => null),
+      rateLimitMessage
+        .waitFor({ state: "visible", timeout: 10_000 })
+        .then(() => "rate-limited")
+        .catch(() => null),
     ]);
+    if (outcome === "rate-limited") {
+      test.skip(true, "Supabase email-send rate limit reached; rerun signup E2E after the provider window resets.");
+    }
     expect(["confirmation", "dashboard"]).toContain(outcome);
 
     await expect

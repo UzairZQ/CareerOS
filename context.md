@@ -443,6 +443,7 @@ Current production-hardening notes:
   - profile, work-hour logs, evidence rows, AI provider settings: `lib/dashboard-validation.ts`
 - `/api/ai-settings` validates JSON/provider/key payloads server-side and rejects unauthenticated requests before writes.
 - `/api/ai-insight` rejects malformed/oversized payloads, uses authenticated per-user encrypted keys, and applies a 30-second provider timeout.
+- Auth provider errors are normalized into user-friendly messages, including a clear email-send rate-limit state.
 - AI defaults are current and configurable through `CAREEROS_GEMINI_MODEL`, `CAREEROS_GROQ_MODEL`, and `CAREEROS_OPENROUTER_MODEL`; current defaults are Gemini 2.5 Flash, Groq GPT-OSS 20B, and OpenRouter Google Gemini 2.5 Flash.
 - Async form handlers capture their form element before Supabase awaits, so successful add-job and work-hour submissions do not hit React's cleared `event.currentTarget`.
 - Optional dashboard validation fields accept `null` as well as empty strings, matching the database payloads for blank profile/evidence fields.
@@ -465,9 +466,9 @@ Current production-hardening notes:
 Verified across 2026-07-09 and 2026-07-10:
 
 - `npm run lint` passed.
-- `npm test` passed: 16 tests passed, 3 intentionally skipped integration tests in the default run.
+- `npm test` passed: 17 tests passed, 3 intentionally skipped integration tests in the default run.
 - `npm run test:integration` passed: 3 real Supabase tests passed.
-- `npm run test:e2e` passed: authenticated Chromium flow passed, including console/page-error assertions.
+- The isolated signup E2E passed with metadata persistence. The full single-worker Chromium suite passed the dashboard flow and transparently skipped signup when Supabase email-send rate limiting was active.
 - `npm run build` passed with Next.js 16.2.10 using webpack.
 - `npm audit --audit-level=moderate` reported 0 vulnerabilities.
 - Browser inspection at the default 1280x720 viewport showed the dashboard content in an internal scroll region.
@@ -479,6 +480,7 @@ Verified across 2026-07-09 and 2026-07-10:
   into the ATS analyzer without a server upload.
 - The empty-module E2E assertions prove CV Check, Skill Gap, and Assistant do
   not fabricate sample content for a new account.
+- Playwright runs with one worker to avoid creating concurrent confirmation-email requests against Supabase's provider quota.
 
 The dashboard is intentionally a long, scrollable work surface: the outer page stays fixed to the viewport while the main dashboard column scrolls through all modules. This is required so users can reach the complete application rather than clipping the lower modules.
 
@@ -565,7 +567,7 @@ context.md
 
 Recommended next implementation order:
 
-1. Test email/password signup/login end to end.
+1. Rerun the signup E2E after the Supabase email-send quota window resets, if a non-skipped confirmation-email run is needed.
 2. Enable Google provider in Supabase if needed.
 3. Test Google OAuth end to end.
 4. Commit the current auth/dashboard work once stable.
