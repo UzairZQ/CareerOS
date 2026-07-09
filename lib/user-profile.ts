@@ -11,6 +11,7 @@ export type UserProfileData = {
   languages: string[];
   target_roles: string[];
   profile_note: string | null;
+  cv_text: string | null;
 };
 
 export function calculateProfileReadiness(profile: UserProfileData) {

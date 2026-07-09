@@ -117,6 +117,12 @@ to the connected live project and verified through a schema query and the live
 integration test. `evidence_items.is_cv_ready` is now true only when evidence
 text, a proof link, and a `direct`, `bridge`, or `basic` confidence are present.
 
+The migration `supabase/migrations/20260710_add_cv_text_to_user_profiles.sql`
+was applied to the connected live project and verified through the live
+integration and authenticated E2E suites. `user_profiles.cv_text` stores only
+the user's explicitly saved extracted/pasted CV text; PDF binaries are not
+uploaded by the CV workflow.
+
 Current `applications` fields:
 - `id`
 - `user_id`
@@ -257,6 +263,7 @@ Current dashboard includes:
 - 3/7/14-day learning sprint generation
 - Rule-based CV/ATS inspection
 - Local PDF upload and selectable-text extraction into the ATS editor
+- Explicit CV text save and reload persistence through `user_profiles.cv_text`
 - Evidence-backed application suggestions
 - User profile settings
 - Optional encrypted BYOK AI settings and inline insights
@@ -423,6 +430,7 @@ Current production-hardening notes:
   - Evidence Map React proof save and database verification
   - CV check module rendering
   - selectable-text PDF selection, local extraction, and ATS text-area update
+  - explicit CV text save followed by page reload and value restoration
   - invalid AI key validation without a provider call
   - valid temporary BYOK key activation refreshes AI insight buttons without an external model call
   - database verification after the UI mutation
@@ -433,6 +441,7 @@ Current production-hardening notes:
   - RLS-protected application create/read/update
   - cross-user isolation check
   - profile upsert
+  - saved CV text round-trip through `user_profiles.cv_text`
   - work-hour log insert
   - evidence upsert with generated `is_cv_ready`
   - cleanup of temporary users/rows
@@ -483,6 +492,8 @@ Verified across 2026-07-09 and 2026-07-10:
   into the ATS analyzer without a server upload.
 - The empty-module E2E assertions prove CV Check, Skill Gap, and Assistant do
   not fabricate sample content for a new account.
+- The authenticated E2E assertion proves explicitly saved CV text is restored
+  after a full page reload.
 - The authenticated E2E assertion proves Evidence Map proof saves update the
   dashboard's live Evidence ready metric without a full-page reload.
 - Playwright runs with one worker to avoid creating concurrent confirmation-email requests against Supabase's provider quota.
@@ -502,7 +513,8 @@ Recent committed state before the latest auth/dashboard work:
 - `8dfd9ac Clean up public hero navigation`
 - `25f1a3b Add app icon`
 
-Current work may be uncommitted. Check with:
+Commits are pushed to `origin/main` after each completed milestone or major
+vertical slice. Check with:
 
 ```bash
 git status --short

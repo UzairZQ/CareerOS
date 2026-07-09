@@ -1,10 +1,13 @@
 "use client";
 
-import { CheckCircle2, FileCheck2, ShieldAlert, Upload, Wand2, XCircle } from "lucide-react";
+import { CheckCircle2, FileCheck2, Save, ShieldAlert, Upload, Wand2, XCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
 import { AiInsightButton, type AiProviderSettingSummary } from "@/components/ai-insight-button";
 import { analyzeCvText } from "@/lib/careeros-analyzer";
+import { cvTextSchema, formatValidationError } from "@/lib/dashboard-validation";
+import { createClient } from "@/lib/supabase/browser";
 
 type CvApplicationOption = {
   id: string;
@@ -16,19 +19,26 @@ type CvApplicationOption = {
 export function CvCheckPanel({
   aiSettings,
   applications,
+  initialCvText,
+  userId,
 }: {
   aiSettings: AiProviderSettingSummary[];
   applications: CvApplicationOption[];
+  initialCvText: string | null;
+  userId: string;
 }) {
+  const router = useRouter();
   const firstApplicationWithJd = applications.find((application) => application.job_description);
   const [selectedApplicationId, setSelectedApplicationId] = useState(firstApplicationWithJd?.id ?? "manual");
   const selectedApplication = applications.find((application) => application.id === selectedApplicationId);
   const [manualJobDescription, setManualJobDescription] = useState(
     firstApplicationWithJd?.job_description ?? "",
   );
-  const [cvText, setCvText] = useState("");
+  const [cvText, setCvText] = useState(initialCvText ?? "");
   const [pdfStatus, setPdfStatus] = useState<"idle" | "reading" | "ready" | "error">("idle");
   const [pdfMessage, setPdfMessage] = useState("");
+  const [cvSaveStatus, setCvSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [cvSaveMessage, setCvSaveMessage] = useState("");
   const jobDescription = selectedApplication?.job_description?.trim() || manualJobDescription;
   const cvCheck = useMemo(() => analyzeCvText(cvText, jobDescription), [cvText, jobDescription]);
   const scoreTone =
@@ -102,6 +112,37 @@ export function CvCheckPanel({
     }
   }
 
+  async function saveCvText() {
+    setCvSaveStatus("saving");
+    setCvSaveMessage("");
+
+    const parsedCvText = cvTextSchema.safeParse(cvText);
+    if (!parsedCvText.success) {
+      setCvSaveStatus("error");
+      setCvSaveMessage(formatValidationError(parsedCvText.error));
+      return;
+    }
+
+    const supabase = createClient();
+    const { error } = await supabase.from("user_profiles").upsert(
+      {
+        cv_text: parsedCvText.data,
+        user_id: userId,
+      },
+      { onConflict: "user_id" },
+    );
+
+    if (error) {
+      setCvSaveStatus("error");
+      setCvSaveMessage(error.message);
+      return;
+    }
+
+    setCvSaveStatus("saved");
+    setCvSaveMessage("CV saved.");
+    router.refresh();
+  }
+
   return (
     <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
       <article className="card-sheen rounded-[22px] border border-white/10 p-4 shadow-dashboard-card md:p-5">
@@ -154,10 +195,33 @@ export function CvCheckPanel({
           </span>
           <textarea
             className="dashboard-input min-h-[260px] w-full resize-y leading-6"
-            onChange={(event) => setCvText(event.target.value)}
+            onChange={(event) => {
+              setCvText(event.target.value);
+              setCvSaveStatus("idle");
+              setCvSaveMessage("");
+            }}
             placeholder="Paste plain CV text here, or upload a text-based PDF above."
             value={cvText}
           />
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <p
+              className={`text-xs ${
+                cvSaveStatus === "error" ? "text-[#FFD8B0]" : "text-[#AEB6C2]"
+              }`}
+            >
+              {cvSaveMessage || "Save the extracted text to keep it available for your next session."}
+            </p>
+            <button
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#9BB99B]/45 bg-[#5C7A5C]/14 px-4 text-sm font-semibold text-[#DDF0DD] transition hover:border-[#9BB99B]/70 hover:bg-[#5C7A5C]/24 disabled:cursor-not-allowed disabled:opacity-60"
+              data-testid="cv-save"
+              disabled={cvSaveStatus === "saving"}
+              onClick={saveCvText}
+              type="button"
+            >
+              <Save size={15} strokeWidth={1.9} />
+              {cvSaveStatus === "saving" ? "Saving..." : cvSaveStatus === "saved" ? "Saved" : "Save CV text"}
+            </button>
+          </div>
           {pdfStatus === "error" ? <p className="mt-2 text-xs text-[#FFD8B0]">{pdfMessage}</p> : null}
         </label>
 

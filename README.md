@@ -9,6 +9,7 @@ It combines:
 - Germany-focused work-hour logging and allowance summaries
 - Deterministic job-description analysis
 - Local selectable-text PDF extraction for CV checks
+- Explicit CV text persistence in the user's private profile
 - An evidence map: required skill -> evidence -> confidence -> proof task
 - 3, 7, and 14-day learning sprints
 - Rule-based CV/ATS inspection
@@ -62,7 +63,10 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Run [supabase/schema.sql](/Users/uzair99/Development/CareerOS/supabase/schema.sql) in the Supabase SQL editor for the base schema and RLS policies.
 
-After the base schema, run the migration in [supabase/migrations/20260709_require_proof_for_cv_ready.sql](/Users/uzair99/Development/CareerOS/supabase/migrations/20260709_require_proof_for_cv_ready.sql). It keeps `is_cv_ready` false until a CV-ready evidence row has both an evidence summary and a proof link.
+After the base schema, run the migrations in:
+
+- [supabase/migrations/20260709_require_proof_for_cv_ready.sql](/Users/uzair99/Development/CareerOS/supabase/migrations/20260709_require_proof_for_cv_ready.sql), which keeps `is_cv_ready` false until a CV-ready evidence row has both an evidence summary and a proof link.
+- [supabase/migrations/20260710_add_cv_text_to_user_profiles.sql](/Users/uzair99/Development/CareerOS/supabase/migrations/20260710_add_cv_text_to_user_profiles.sql), which adds the private saved CV text field.
 
 Never commit `.env.local`, service-role credentials, database passwords, or provider API keys.
 
@@ -77,7 +81,7 @@ npm run build
 npm audit --audit-level=moderate
 ```
 
-The integration test uses temporary Supabase users and verifies RLS. The E2E tests cover login, signup metadata persistence, application CRUD, work-hour logging, profile saving, evidence persistence, local selectable-text PDF extraction, CV check rendering, BYOK activation, empty-state rendering, and browser error detection.
+The integration test uses temporary Supabase users and verifies RLS. The E2E tests cover login, signup metadata persistence, application CRUD, work-hour logging, profile saving, evidence persistence, local selectable-text PDF extraction, explicit CV save and reload persistence, CV check rendering, BYOK activation, empty-state rendering, and browser error detection.
 
 ## Optional AI
 

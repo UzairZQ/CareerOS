@@ -38,9 +38,10 @@ export function ProfileSettingsPanel({
         languages: parseCommaList(languages),
         profile_note: profileNote,
         target_roles: parseCommaList(targetRoles),
+        cv_text: initialProfile.cv_text,
         work_authorization: workAuthorization,
       }),
-    [currentCity, fullName, languages, profileNote, targetRoles, workAuthorization],
+    [currentCity, fullName, initialProfile.cv_text, languages, profileNote, targetRoles, workAuthorization],
   );
 
   async function saveProfile(event: React.FormEvent<HTMLFormElement>) {

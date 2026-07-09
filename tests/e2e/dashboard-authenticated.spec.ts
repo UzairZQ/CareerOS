@@ -245,6 +245,12 @@ test.describe("authenticated dashboard UI", () => {
     await expect(page.getByPlaceholder("Paste plain CV text here, or upload a text-based PDF above.")).toHaveValue(
       /CareerOS PDF CV React TypeScript Next.js Evidence Portfolio/,
     );
+    await page.getByTestId("cv-save").click();
+    await expect(page.getByText("CV saved.", { exact: true })).toBeVisible();
+    await page.reload();
+    await expect(page.getByPlaceholder("Paste plain CV text here, or upload a text-based PDF above.")).toHaveValue(
+      /CareerOS PDF CV React TypeScript Next.js Evidence Portfolio/,
+    );
 
     await page.getByRole("link", { exact: true, name: "AI Insights" }).click();
     await page.getByPlaceholder("Paste your own provider key").fill("short");
@@ -268,6 +274,12 @@ test.describe("authenticated dashboard UI", () => {
       .eq("user_id", userId);
     expect(remainingApplicationsError).toBeNull();
     expect(remainingApplications).toEqual([]);
+
+    const { error: clearCvError } = await admin
+      .from("user_profiles")
+      .update({ cv_text: null })
+      .eq("user_id", userId);
+    expect(clearCvError).toBeNull();
 
     await page.goto(`/dashboard?empty-check=${Date.now()}#overview`);
     await expect(page.getByRole("heading", { exact: true, name: "CareerOS Control" })).toBeVisible();

@@ -103,7 +103,7 @@ export default async function DashboardPage() {
       : null;
   const { data: userProfile, error: userProfileError } = await supabase
     .from("user_profiles")
-    .select("full_name, current_city, work_authorization, languages, target_roles, profile_note")
+    .select("full_name, current_city, work_authorization, languages, target_roles, profile_note, cv_text")
     .eq("user_id", user.id)
     .maybeSingle<UserProfileRecord>();
   const profile: UserProfileData = {
@@ -111,6 +111,7 @@ export default async function DashboardPage() {
     full_name: userProfile?.full_name ?? metadataFullName,
     languages: userProfile?.languages ?? [],
     profile_note: userProfile?.profile_note ?? null,
+    cv_text: userProfile?.cv_text ?? null,
     target_roles:
       userProfile?.target_roles && userProfile.target_roles.length > 0
         ? userProfile.target_roles
@@ -446,6 +447,8 @@ export default async function DashboardPage() {
                 role: application.role,
                 job_description: application.job_description,
               }))}
+              initialCvText={profile.cv_text}
+              userId={user.id}
             />
           </section>
 

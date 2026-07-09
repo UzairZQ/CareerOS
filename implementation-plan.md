@@ -8,6 +8,7 @@ The first production-oriented vertical slice is implemented in the repository:
 - Supabase Auth, PostgreSQL tables, and RLS are connected.
 - The protected dashboard contains applications, work hours, JD analysis, Evidence Map, learning sprints, CV check, Application Assistant, profile settings, and optional BYOK AI Insights.
 - CV Check accepts selectable-text PDFs up to 5 MB and extracts their text locally with `pdfjs-dist`.
+- CV Check can explicitly save extracted/pasted CV text to the signed-in user's private `user_profiles` row and restores it on reload; PDF binaries are never uploaded by this workflow.
 - Empty accounts receive honest empty states across CV Check, Skill Gap, and Application Assistant; sample user/job content is not shown as real data.
 - Dashboard analytics counts only proof-backed evidence, and application summaries are not silently capped at 20 records.
 - Evidence Map proof saves refresh the server-rendered analytics so evidence progress is visible immediately.
@@ -22,6 +23,9 @@ Remaining external setup is intentionally separate from application code:
 
 The proof-link migration has been applied to the connected Supabase project and
 verified by the live integration suite.
+
+The CV text migration has also been applied to the connected Supabase project
+and verified by the live integration and authenticated browser suites.
 
 ## What This Project Is
 
@@ -245,6 +249,7 @@ Confirmed implementation:
 - Forms: React Hook Form.
 - Charts: Recharts.
 - ATS parsing: pdf.js.
+- CV persistence: extracted text saved explicitly to `user_profiles.cv_text`; no PDF binary storage in the MVP.
 - Optional AI: Gemini first, with Groq and OpenRouter as Bring Your Own Key alternatives.
 - AI backend: authenticated Next.js server routes, not browser-side API calls.
 - Hosting target: Vercel for the Next.js app, Supabase cloud for backend services.

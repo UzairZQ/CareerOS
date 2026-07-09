@@ -231,6 +231,7 @@ create table if not exists public.user_profiles (
   languages text[] not null default '{}',
   target_roles text[] not null default '{}',
   profile_note text,
+  cv_text text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

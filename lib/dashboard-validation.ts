@@ -72,6 +72,8 @@ export const profileSchema = z.object({
   work_authorization: workAuthorizationSchema,
 });
 
+export const cvTextSchema = optionalTrimmedString(100_000);
+
 export const workHourLogSchema = z.object({
   day_type: dayTypeSchema,
   employer: optionalTrimmedString(160),

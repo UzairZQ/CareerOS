@@ -141,7 +141,8 @@ describeIntegration("Supabase authenticated dashboard flow", () => {
   it("persists profile, work-hour log, and evidence rows for the signed-in user", async () => {
     expect(applicationId).toBeTruthy();
 
-    const { error: profileError } = await userClient.from("user_profiles").upsert({
+    const { data: profile, error: profileError } = await userClient.from("user_profiles").upsert({
+      cv_text: "CareerOS integration CV React TypeScript proof.",
       current_city: "Frankfurt",
       full_name: "CareerOS Integration User",
       languages: ["English C1", "German B1"],
@@ -149,8 +150,9 @@ describeIntegration("Supabase authenticated dashboard flow", () => {
       target_roles: ["Frontend Working Student"],
       user_id: userId,
       work_authorization: "student_visa",
-    });
+    }).select("cv_text").single();
     expect(profileError).toBeNull();
+    expect(profile?.cv_text).toContain("CareerOS integration CV");
 
     const { data: workLog, error: workLogError } = await userClient
       .from("work_hour_logs")

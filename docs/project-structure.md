@@ -43,6 +43,7 @@ CareerOS/
   supabase/
     schema.sql
     migrations/20260709_require_proof_for_cv_ready.sql
+    migrations/20260710_add_cv_text_to_user_profiles.sql
   tests/
     analyzer.test.ts
     validation.test.ts
@@ -76,3 +77,4 @@ logic lives in `lib/`, and Supabase SQL/RLS lives in `supabase/`.
 - 2026-07-04: `milestone-1.md` will be created only after discussion.
 - 2026-07-06: Created the first Next.js visual prototype with `/` as the animated video login/entry screen and `/dashboard` as the CareerOS dark premium dashboard mock.
 - 2026-07-09: Implemented the Supabase-backed auth/dashboard vertical slice, optional BYOK AI routes, authenticated E2E coverage, proof-link enforcement, honest empty state, local selectable-text PDF extraction, live proof-link migration verification, and production verification gates.
+- 2026-07-10: Added explicit CV text persistence through `user_profiles.cv_text`; selectable-text PDF extraction remains local, and the save/reload path is covered by live integration and authenticated E2E tests.
