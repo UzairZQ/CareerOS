@@ -3,7 +3,7 @@
 import { ArrowRight, BriefcaseBusiness, Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type React from "react";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { createClient } from "@/lib/supabase/browser";
 
 type AuthMode = "login" | "signup";
@@ -19,7 +19,7 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
   const [targetRole, setTargetRole] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberEmail, setRememberEmail] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading">("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(initialError);
@@ -30,6 +30,20 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
     getClientHydration,
     getServerHydration,
   );
+
+  useEffect(() => {
+    try {
+      const savedEmail = window.localStorage.getItem("careeros.remembered_email");
+      if (savedEmail) {
+        // Browser storage is an external source; sync it into the controlled form once.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setEmail(savedEmail);
+        setRememberEmail(true);
+      }
+    } catch {
+      // Private browsing modes may deny local storage; auth still works normally.
+    }
+  }, []);
 
   function switchMode(nextMode: AuthMode) {
     setMode(nextMode);
@@ -55,6 +69,16 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
         setError(signInError.message);
         setStatus("idle");
         return;
+      }
+
+      try {
+        if (rememberEmail) {
+          window.localStorage.setItem("careeros.remembered_email", email);
+        } else {
+          window.localStorage.removeItem("careeros.remembered_email");
+        }
+      } catch {
+        // Remembering the email is optional and must never block sign-in.
       }
 
       router.replace("/dashboard");
@@ -203,15 +227,19 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
         </div>
 
         <div className="mt-3 flex items-center justify-between gap-4 text-sm font-medium text-white/70 sm:mt-4">
-          <label className="flex items-center gap-3">
-            <input
-              checked={rememberMe}
-              className="h-5 w-5 appearance-none rounded-md border border-white/22 bg-white/6 checked:border-white checked:bg-white"
-              onChange={() => setRememberMe((current) => !current)}
-              type="checkbox"
-            />
-            {isLogin ? "Remember me" : "I agree"}
-          </label>
+          {isLogin ? (
+            <label className="flex items-center gap-3">
+              <input
+                checked={rememberEmail}
+                className="h-5 w-5 appearance-none rounded-md border border-white/22 bg-white/6 checked:border-white checked:bg-white"
+                onChange={() => setRememberEmail((current) => !current)}
+                type="checkbox"
+              />
+              Remember email
+            </label>
+          ) : (
+            <span className="text-white/52">You&apos;ll confirm your email after signup.</span>
+          )}
           {isLogin && (
             <button
               className="text-white/72 transition hover:text-white"

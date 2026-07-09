@@ -47,6 +47,7 @@ CareerOS/
     validation.test.ts
     integration/supabase-flow.test.ts
     e2e/dashboard-authenticated.spec.ts
+    e2e/auth.spec.ts
   proxy.ts
   .env.example
   eslint.config.mjs

@@ -411,6 +411,7 @@ Current production-hardening notes:
 - Current authenticated E2E coverage includes:
   - temporary Supabase user creation and cleanup
   - email/password login and redirect to `/dashboard`
+  - signup mode switching, signup submission, and metadata persistence
   - dashboard module navigation
   - add-job form submission and database verification
   - application status, follow-up, and notes update
@@ -532,6 +533,7 @@ lib/application-validation.ts
 lib/dashboard-validation.ts
 tests/validation.test.ts
 tests/analyzer.test.ts
+tests/e2e/auth.spec.ts
 tests/integration/supabase-flow.test.ts
 vitest.config.ts
 ```

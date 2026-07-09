@@ -77,7 +77,7 @@ npm run build
 npm audit --audit-level=moderate
 ```
 
-The integration test uses temporary Supabase users and verifies RLS. The E2E test covers authentication, application CRUD, work-hour logging, profile saving, evidence persistence, local selectable-text PDF extraction, CV check rendering, BYOK activation, empty-state rendering, and browser error detection.
+The integration test uses temporary Supabase users and verifies RLS. The E2E tests cover login, signup metadata persistence, application CRUD, work-hour logging, profile saving, evidence persistence, local selectable-text PDF extraction, CV check rendering, BYOK activation, empty-state rendering, and browser error detection.
 
 ## Optional AI
 
