@@ -74,6 +74,20 @@ export const profileSchema = z.object({
 
 export const cvTextSchema = optionalTrimmedString(100_000);
 
+export const learningSprintDaysSchema = z.union([z.literal(3), z.literal(7), z.literal(14)]);
+
+export const learningSprintSchema = z.object({
+  application_id: z.string().uuid(),
+  duration_days: learningSprintDaysSchema,
+  skill: z.string().trim().min(1).max(120),
+  user_id: z.string().uuid(),
+});
+
+export const learningSprintTaskProofSchema = z.object({
+  proof_note: optionalTrimmedString(1200),
+  proof_url: optionalUrlSchema,
+});
+
 export const workHourLogSchema = z.object({
   day_type: dayTypeSchema,
   employer: optionalTrimmedString(160),

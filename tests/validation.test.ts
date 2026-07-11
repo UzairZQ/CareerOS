@@ -7,6 +7,8 @@ import {
   aiInsightRequestSchema,
   aiSettingsSchema,
   evidenceItemSchema,
+  learningSprintSchema,
+  learningSprintTaskProofSchema,
   parseCommaList,
   profileSchema,
   workHourLogSchema,
@@ -133,6 +135,30 @@ describe("dashboard validation", () => {
         work_date: "2026-07-09",
       }).success,
     ).toBe(false);
+  });
+
+  it("validates sprint setup and normalizes proof fields", () => {
+    expect(
+      learningSprintSchema.safeParse({
+        application_id: applicationId,
+        duration_days: 7,
+        skill: "TypeScript",
+        user_id: userId,
+      }).success,
+    ).toBe(true);
+    expect(
+      learningSprintTaskProofSchema.parse({
+        proof_note: "Explained the type narrowing decision.",
+        proof_url: "",
+      }),
+    ).toEqual({
+      proof_note: "Explained the type narrowing decision.",
+      proof_url: null,
+    });
+    expect(learningSprintTaskProofSchema.parse({ proof_note: "", proof_url: "" })).toEqual({
+      proof_note: null,
+      proof_url: null,
+    });
   });
 
   it("requires evidence proof links to be safe URLs when present", () => {

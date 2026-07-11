@@ -210,6 +210,64 @@ describeIntegration("Supabase authenticated dashboard flow", () => {
       .eq("application_id", applicationId)
       .eq("skill", "Supabase");
     expect(restoreEvidenceError).toBeNull();
+
+    const { data: sprint, error: sprintError } = await userClient
+      .from("learning_sprints")
+      .upsert(
+        {
+          application_id: applicationId,
+          duration_days: 3,
+          skill: "TypeScript",
+          user_id: userId,
+          status: "active",
+        },
+        { onConflict: "user_id,application_id,skill" },
+      )
+      .select("id, duration_days, status")
+      .single();
+    expect(sprintError).toBeNull();
+    expect(sprint).toMatchObject({ duration_days: 3, status: "active" });
+
+    const { data: sprintTask, error: sprintTaskError } = await userClient
+      .from("learning_sprint_tasks")
+      .insert({
+        sprint_id: sprint!.id,
+        task_order: 1,
+        title: "Publish a TypeScript proof.",
+      })
+      .select("id, completed")
+      .single();
+    expect(sprintTaskError).toBeNull();
+    expect(sprintTask?.completed).toBe(false);
+
+    const { error: incompleteTaskError } = await userClient
+      .from("learning_sprint_tasks")
+      .update({ completed: true })
+      .eq("id", sprintTask!.id);
+    expect(incompleteTaskError).not.toBeNull();
+
+    const { data: provenTask, error: provenTaskError } = await userClient
+      .from("learning_sprint_tasks")
+      .update({
+        completed: true,
+        proof_note: "Built and published the TypeScript proof.",
+        proof_url: "https://github.com/example/typescript-proof",
+      })
+      .eq("id", sprintTask!.id)
+      .select("completed, proof_url")
+      .single();
+    expect(provenTaskError).toBeNull();
+    expect(provenTask).toMatchObject({
+      completed: true,
+      proof_url: "https://github.com/example/typescript-proof",
+    });
+
+    const { data: otherSprintRows, error: otherSprintError } = await otherClient
+      .from("learning_sprints")
+      .select("id")
+      .eq("id", sprint!.id);
+    expect(otherSprintError).toBeNull();
+    expect(otherSprintRows).toEqual([]);
   });
 
   it("prevents a signed-in user from writing rows for another user id", async () => {

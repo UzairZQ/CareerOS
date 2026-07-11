@@ -221,6 +221,21 @@ test.describe("authenticated dashboard UI", () => {
     await page.getByRole("link", { exact: true, name: "Overview" }).click();
     await expect(page.getByTestId("analytics-evidence-ready")).toHaveText("1");
 
+    await page.getByRole("link", { exact: true, name: "Skill Gap" }).click();
+    await expect(page.getByTestId("sprint-create")).toBeVisible();
+    await page.getByRole("button", { exact: true, name: "3d" }).click();
+    await page.getByTestId("sprint-create").click();
+    await expect(page.getByText("Sprint created. Add proof as you complete each task.", { exact: true })).toBeVisible();
+    for (const taskOrder of [1, 2, 3]) {
+      await page
+        .getByTestId(`sprint-proof-url-${taskOrder}`)
+        .fill(`https://github.com/example/careeros-sprint-${taskOrder}`);
+      await page.getByTestId(`sprint-save-task-${taskOrder}`).click();
+      await expect(page.getByText("Proof saved for this task.", { exact: true })).toBeVisible();
+    }
+    await page.getByTestId("sprint-improve-skill").click();
+    await expect(page.getByRole("button", { exact: true, name: "Skill improved" })).toBeVisible();
+
     const { data: evidence, error: evidenceError } = await admin
       .from("evidence_items")
       .select("confidence, proof_url")
@@ -233,6 +248,23 @@ test.describe("authenticated dashboard UI", () => {
       confidence: "direct",
       proof_url: "https://github.com/example/careeros-e2e",
     });
+
+    const { data: sprintRows, error: sprintRowsError } = await admin
+      .from("learning_sprints")
+      .select("id, status, duration_days, skill")
+      .eq("user_id", userId);
+    expect(sprintRowsError).toBeNull();
+    expect(sprintRows).toEqual([
+      expect.objectContaining({ duration_days: 3, skill: expect.any(String), status: "completed" }),
+    ]);
+
+    const { data: sprintTasks, error: sprintTasksError } = await admin
+      .from("learning_sprint_tasks")
+      .select("completed, proof_url")
+      .eq("sprint_id", sprintRows![0].id);
+    expect(sprintTasksError).toBeNull();
+    expect(sprintTasks).toHaveLength(3);
+    expect(sprintTasks?.every((task) => task.completed && task.proof_url)).toBe(true);
 
     await page.getByRole("link", { exact: true, name: "CV Check" }).click();
     await expect(page.getByRole("heading", { exact: true, name: "Readability before tailoring" })).toBeVisible();
@@ -297,5 +329,21 @@ test.describe("authenticated dashboard UI", () => {
 
     expect(pageErrors).toEqual([]);
     expect(consoleErrors).toEqual([]);
+  });
+
+  test("keeps the dashboard inside a narrow viewport", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await page.getByPlaceholder("Email address").fill(email);
+    await page.getByPlaceholder("Password").fill(password);
+    await page.getByRole("button", { exact: true, name: "Sign In" }).click();
+
+    await expect(page).toHaveURL(/\/dashboard/);
+    await expect(page.getByRole("navigation", { name: "Dashboard modules" })).toBeVisible();
+
+    const documentOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth || document.body.scrollWidth > window.innerWidth,
+    );
+    expect(documentOverflow).toBe(false);
   });
 });

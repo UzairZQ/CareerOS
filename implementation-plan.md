@@ -9,6 +9,7 @@ The first production-oriented vertical slice is implemented in the repository:
 - The protected dashboard contains applications, work hours, JD analysis, Evidence Map, learning sprints, CV check, Application Assistant, profile settings, and optional BYOK AI Insights.
 - CV Check accepts selectable-text PDFs up to 5 MB and extracts their text locally with `pdfjs-dist`.
 - CV Check can explicitly save extracted/pasted CV text to the signed-in user's private `user_profiles` row and restores it on reload; PDF binaries are never uploaded by this workflow.
+- Learning Sprint now persists one active plan per application/skill, stores proof per task, and only improves the Evidence Map skill after every task has a proof link.
 - Empty accounts receive honest empty states across CV Check, Skill Gap, and Application Assistant; sample user/job content is not shown as real data.
 - Dashboard analytics counts only proof-backed evidence, and application summaries are not silently capped at 20 records.
 - Evidence Map proof saves refresh the server-rendered analytics so evidence progress is visible immediately.
@@ -26,6 +27,9 @@ verified by the live integration suite.
 
 The CV text migration has also been applied to the connected Supabase project
 and verified by the live integration and authenticated browser suites.
+
+The Learning Sprint migration has also been applied to the connected Supabase
+project and verified by the live integration and authenticated browser suites.
 
 ## What This Project Is
 
@@ -207,6 +211,15 @@ Learning goals:
 - Skill taxonomy design.
 - Evidence-backed product logic.
 - More complex SQL queries.
+
+### 7. Learning Sprint Persistence
+
+- Create a 3, 7, or 14-day sprint for a selected application and weak skill.
+- Persist the sprint and ordered task rows in PostgreSQL.
+- Attach a proof URL or proof note to each task.
+- The database rejects a task marked complete without proof.
+- The UI requires a proof link for every task before improving the Evidence Map skill to `basic` confidence.
+- The completed skill remains evidence-backed and is not counted as CV-ready without a valid proof link and evidence summary.
 
 ## Non-AI Intelligence Strategy
 

@@ -21,6 +21,8 @@ import {
 import {
   evidenceItemSchema,
   formatValidationError,
+  learningSprintSchema,
+  learningSprintTaskProofSchema,
 } from "@/lib/dashboard-validation";
 import { createClient } from "@/lib/supabase/browser";
 
@@ -46,6 +48,26 @@ type InitialEvidenceItem = {
 };
 
 type SaveState = "idle" | "saving" | "saved" | "error";
+
+type LearningSprintTask = {
+  id: string;
+  task_order: number;
+  title: string;
+  proof_url: string | null;
+  proof_note: string | null;
+  completed: boolean;
+};
+
+type LearningSprint = {
+  id: string;
+  application_id: string;
+  skill: string;
+  duration_days: 3 | 7 | 14;
+  status: "active" | "completed" | "archived";
+  tasks: LearningSprintTask[];
+};
+
+type SprintStatus = "idle" | "loading" | "creating" | "saving" | "error";
 
 const confidenceLabels: Record<SkillConfidence, string> = {
   direct: "Direct",
@@ -93,6 +115,9 @@ export function JdEvidenceWorkspace({
   const [saveStateBySkill, setSaveStateBySkill] = useState<Record<string, SaveState>>({});
   const [errorBySkill, setErrorBySkill] = useState<Record<string, string | null>>({});
   const [sprintDays, setSprintDays] = useState<3 | 7 | 14>(7);
+  const [sprint, setSprint] = useState<LearningSprint | null>(null);
+  const [sprintStatus, setSprintStatus] = useState<SprintStatus>("idle");
+  const [sprintMessage, setSprintMessage] = useState<string | null>(null);
   const canPersistEvidence = Boolean(
     selectedApplication?.job_description?.trim() && evidenceTableReady,
   );
@@ -150,6 +175,72 @@ export function JdEvidenceWorkspace({
     return !row?.evidence.trim() || row.confidence === "missing" || row.confidence === "learning" || row.confidence === "basic";
   });
   const selectedSprintSkill = sprintSkills[0];
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSprint() {
+      if (!selectedApplication || !selectedSprintSkill) {
+        setSprint(null);
+        setSprintStatus("idle");
+        setSprintMessage(null);
+        return;
+      }
+
+      setSprintStatus("loading");
+      setSprintMessage(null);
+      const supabase = createClient();
+      const { data: sprintRow, error: sprintError } = await supabase
+        .from("learning_sprints")
+        .select("id, application_id, skill, duration_days, status")
+        .eq("application_id", selectedApplication.id)
+        .eq("skill", selectedSprintSkill.skill)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (sprintError) {
+        setSprint(null);
+        setSprintStatus("error");
+        setSprintMessage("Learning Sprint storage is not ready. Run the latest Supabase migration.");
+        return;
+      }
+
+      if (!sprintRow) {
+        setSprint(null);
+        setSprintStatus("idle");
+        return;
+      }
+
+      const { data: taskRows, error: taskError } = await supabase
+        .from("learning_sprint_tasks")
+        .select("id, task_order, title, proof_url, proof_note, completed")
+        .eq("sprint_id", sprintRow.id)
+        .order("task_order", { ascending: true });
+
+      if (cancelled) return;
+
+      if (taskError) {
+        setSprint(null);
+        setSprintStatus("error");
+        setSprintMessage("The sprint exists, but its tasks could not be loaded.");
+        return;
+      }
+
+      setSprint({
+        ...sprintRow,
+        duration_days: sprintRow.duration_days as 3 | 7 | 14,
+        status: sprintRow.status as LearningSprint["status"],
+        tasks: taskRows ?? [],
+      });
+      setSprintStatus("idle");
+    }
+
+    void loadSprint();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedApplication, selectedSprintSkill]);
 
   function updateEvidence(skill: string, updates: Partial<EvidenceRow>) {
     setEvidenceMap((current) => ({
@@ -212,6 +303,217 @@ export function JdEvidenceWorkspace({
       return;
     }
 
+    router.refresh();
+  }
+
+  async function createSprint() {
+    if (!selectedApplication || !selectedSprintSkill) return;
+
+    const parsedSprint = learningSprintSchema.safeParse({
+      application_id: selectedApplication.id,
+      duration_days: sprintDays,
+      skill: selectedSprintSkill.skill,
+      user_id: userId,
+    });
+
+    if (!parsedSprint.success) {
+      setSprintStatus("error");
+      setSprintMessage(formatValidationError(parsedSprint.error));
+      return;
+    }
+
+    setSprintStatus("creating");
+    setSprintMessage(null);
+    const supabase = createClient();
+    const { data: sprintRow, error: sprintError } = await supabase
+      .from("learning_sprints")
+      .upsert(
+        {
+          ...parsedSprint.data,
+          status: "active",
+        },
+        { onConflict: "user_id,application_id,skill" },
+      )
+      .select("id, application_id, skill, duration_days, status")
+      .single();
+
+    if (sprintError || !sprintRow) {
+      setSprintStatus("error");
+      setSprintMessage(sprintError?.message ?? "Could not create the learning sprint.");
+      return;
+    }
+
+    const { error: deleteTasksError } = await supabase
+      .from("learning_sprint_tasks")
+      .delete()
+      .eq("sprint_id", sprintRow.id);
+    if (deleteTasksError) {
+      setSprintStatus("error");
+      setSprintMessage(deleteTasksError.message);
+      return;
+    }
+
+    const taskTitles = createLearningSprint(selectedSprintSkill.skill, sprintDays);
+    const { data: taskRows, error: taskError } = await supabase
+      .from("learning_sprint_tasks")
+      .insert(
+        taskTitles.map((title, index) => ({
+          sprint_id: sprintRow.id,
+          task_order: index + 1,
+          title,
+        })),
+      )
+      .select("id, task_order, title, proof_url, proof_note, completed")
+      .order("task_order", { ascending: true });
+
+    if (taskError) {
+      setSprintStatus("error");
+      setSprintMessage(taskError.message);
+      return;
+    }
+
+    setSprint({
+      ...sprintRow,
+      duration_days: sprintRow.duration_days as 3 | 7 | 14,
+      status: sprintRow.status as LearningSprint["status"],
+      tasks: taskRows ?? [],
+    });
+    setSprintStatus("idle");
+    setSprintMessage("Sprint created. Add proof as you complete each task.");
+  }
+
+  function updateSprintTask(taskId: string, updates: Partial<LearningSprintTask>) {
+    setSprint((current) =>
+      current
+        ? {
+            ...current,
+            tasks: current.tasks.map((task) =>
+              task.id === taskId ? { ...task, ...updates } : task,
+            ),
+          }
+        : current,
+    );
+    setSprintMessage(null);
+  }
+
+  async function saveSprintTask(task: LearningSprintTask) {
+    const parsedProof = learningSprintTaskProofSchema.safeParse({
+      proof_note: task.proof_note,
+      proof_url: task.proof_url,
+    });
+
+    if (!parsedProof.success) {
+      setSprintStatus("error");
+      setSprintMessage(formatValidationError(parsedProof.error));
+      return;
+    }
+
+    if (!parsedProof.data.proof_url && !parsedProof.data.proof_note) {
+      setSprintStatus("error");
+      setSprintMessage("Add a proof link or note before completing this task.");
+      return;
+    }
+
+    setSprintStatus("saving");
+    setSprintMessage(null);
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("learning_sprint_tasks")
+      .update({
+        ...parsedProof.data,
+        completed: true,
+      })
+      .eq("id", task.id);
+
+    if (error) {
+      setSprintStatus("error");
+      setSprintMessage(error.message);
+      return;
+    }
+
+    updateSprintTask(task.id, {
+      ...parsedProof.data,
+      completed: true,
+    });
+    setSprintStatus("idle");
+    setSprintMessage("Proof saved for this task.");
+  }
+
+  async function improveSkillFromSprint() {
+    // Task proof and skill improvement are separate writes: every task must be proven
+    // before the Evidence Map confidence can move from learning to basic.
+    if (!selectedApplication || !selectedSprintSkill || !sprint) return;
+
+    const allTasksHaveProof = sprint.tasks.length > 0 && sprint.tasks.every((task) => task.proof_url?.trim());
+    if (!allTasksHaveProof) {
+      setSprintStatus("error");
+      setSprintMessage("Add a proof link to every sprint task before improving this skill.");
+      return;
+    }
+
+    const currentRow = evidenceMap[selectedSprintSkill.skill] ?? {
+      evidence: "",
+      confidence: "learning" as SkillConfidence,
+      proofLink: "",
+    };
+    const firstProofLink = sprint.tasks.find((task) => task.proof_url?.trim())?.proof_url ?? null;
+    const evidencePayload = {
+      application_id: selectedApplication.id,
+      confidence: "basic" as const,
+      evidence_summary:
+        currentRow.evidence.trim() ||
+        `Completed a ${sprint.duration_days}-day ${selectedSprintSkill.skill} learning sprint with proof-backed tasks.`,
+      evidence_type: "learning_task" as const,
+      proof_task: createProofTask(selectedSprintSkill.skill, "basic"),
+      proof_url: currentRow.proofLink.trim() || firstProofLink,
+      requirement: selectedSprintSkill.requirement,
+      skill: selectedSprintSkill.skill,
+      skill_category: selectedSprintSkill.category,
+      user_id: userId,
+    };
+    const parsedEvidence = evidenceItemSchema.safeParse(evidencePayload);
+
+    if (!parsedEvidence.success) {
+      setSprintStatus("error");
+      setSprintMessage(formatValidationError(parsedEvidence.error));
+      return;
+    }
+
+    setSprintStatus("saving");
+    setSprintMessage(null);
+    const supabase = createClient();
+    const { error: evidenceError } = await supabase
+      .from("evidence_items")
+      .upsert(parsedEvidence.data, { onConflict: "user_id,application_id,skill" });
+
+    if (evidenceError) {
+      setSprintStatus("error");
+      setSprintMessage(evidenceError.message);
+      return;
+    }
+
+    const { error: sprintError } = await supabase
+      .from("learning_sprints")
+      .update({ status: "completed" })
+      .eq("id", sprint.id);
+
+    if (sprintError) {
+      setSprintStatus("error");
+      setSprintMessage(`Skill improved, but sprint status could not be updated: ${sprintError.message}`);
+      return;
+    }
+
+    setEvidenceMap((current) => ({
+      ...current,
+      [selectedSprintSkill.skill]: {
+        evidence: parsedEvidence.data.evidence_summary ?? "",
+        confidence: "basic",
+        proofLink: parsedEvidence.data.proof_url ?? "",
+      },
+    }));
+    setSprint((current) => (current ? { ...current, status: "completed" } : current));
+    setSprintStatus("idle");
+    setSprintMessage("Skill improved to Basic. Keep the proof link attached before using it in a CV claim.");
     router.refresh();
   }
 
@@ -491,25 +793,127 @@ export function JdEvidenceWorkspace({
 
           {selectedSprintSkill ? (
             <div>
-              <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-[#C77D2E]/40 bg-[#C77D2E]/12 px-3 py-1.5 text-xs font-semibold text-[#FFD8B0]">
-                  {selectedSprintSkill.skill}
-                </span>
-                <span className="text-xs text-[#AEB6C2]">
-                  {evidenceMap[selectedSprintSkill.skill]?.confidence ?? "missing"} confidence
-                </span>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-[#C77D2E]/40 bg-[#C77D2E]/12 px-3 py-1.5 text-xs font-semibold text-[#FFD8B0]">
+                    {selectedSprintSkill.skill}
+                  </span>
+                  <span className="text-xs text-[#AEB6C2]">
+                    {evidenceMap[selectedSprintSkill.skill]?.confidence ?? "missing"} confidence
+                  </span>
+                  {sprint?.status === "completed" ? (
+                    <span className="stamp rounded-full px-2.5 py-1 text-[0.65rem] font-semibold uppercase text-[#DDF0DD]">
+                      Improved
+                    </span>
+                  ) : null}
+                </div>
+                <button
+                  className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-white/12 bg-white/[0.06] px-3 text-xs font-semibold text-white/82 transition hover:border-white/24 hover:bg-white/[0.09] disabled:cursor-not-allowed disabled:opacity-50"
+                  data-testid="sprint-create"
+                  disabled={sprintStatus === "loading" || sprintStatus === "creating" || sprintStatus === "saving"}
+                  onClick={createSprint}
+                  type="button"
+                >
+                  <BookOpenCheck size={14} strokeWidth={1.9} />
+                  {sprint ? "Regenerate plan" : `Create ${sprintDays}-day sprint`}
+                </button>
               </div>
-              <ol className="space-y-2 text-sm leading-6 text-white/76">
-                {createLearningSprint(selectedSprintSkill.skill, sprintDays).map((task, index) => (
-                  <li
-                    className="rounded-[14px] border border-white/10 bg-[#303849]/70 px-3 py-2"
-                    key={task}
-                  >
-                    <span className="mr-2 font-semibold text-white/92">{index + 1}.</span>
-                    {task}
-                  </li>
-                ))}
-              </ol>
+
+              {sprintMessage ? (
+                <p
+                  className={`mb-3 rounded-[14px] border px-3 py-2 text-sm leading-6 ${
+                    sprintStatus === "error"
+                      ? "border-[#C77D2E]/45 bg-[#C77D2E]/12 text-[#FFD8B0]"
+                      : "border-[#5C7A5C]/40 bg-[#5C7A5C]/12 text-[#DDF0DD]"
+                  }`}
+                >
+                  {sprintMessage}
+                </p>
+              ) : null}
+
+              {sprintStatus === "loading" ? (
+                <div className="rounded-[16px] border border-white/10 bg-[#303849]/70 px-4 py-5 text-sm text-[#AEB6C2]">
+                  Loading your saved sprint...
+                </div>
+              ) : sprint ? (
+                <div className="space-y-3">
+                  <p className="text-xs leading-5 text-[#AEB6C2]">
+                    Add a proof link or note for each task. A skill cannot be improved until every task has a link.
+                  </p>
+                  {sprint.tasks.map((task) => (
+                    <div
+                      className="rounded-[16px] border border-white/10 bg-[#303849]/70 p-3"
+                      data-testid={`sprint-task-${task.task_order}`}
+                      key={task.id}
+                    >
+                      <div className="mb-3 flex items-start gap-3">
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-white/14 bg-[#171A1F] font-mono text-xs text-white/82">
+                          {task.task_order}
+                        </span>
+                        <p className="text-sm leading-6 text-white/82">{task.title}</p>
+                        {task.completed ? (
+                          <span className="ml-auto shrink-0 text-xs font-semibold text-[#DDF0DD]">Proof added</span>
+                        ) : null}
+                      </div>
+                      <div className="grid gap-2 md:grid-cols-[1fr_1fr_auto] md:items-end">
+                        <label className="block">
+                          <span className="mb-1 block text-[0.68rem] uppercase tracking-[0.1em] text-[#AEB6C2]">Proof link</span>
+                          <input
+                            className="dashboard-input min-h-0 w-full py-2 text-xs"
+                            data-testid={`sprint-proof-url-${task.task_order}`}
+                            onChange={(event) => updateSprintTask(task.id, { proof_url: event.target.value })}
+                            placeholder="GitHub, deployment, screenshot..."
+                            value={task.proof_url ?? ""}
+                          />
+                        </label>
+                        <label className="block">
+                          <span className="mb-1 block text-[0.68rem] uppercase tracking-[0.1em] text-[#AEB6C2]">Proof note</span>
+                          <input
+                            className="dashboard-input min-h-0 w-full py-2 text-xs"
+                            data-testid={`sprint-proof-note-${task.task_order}`}
+                            onChange={(event) => updateSprintTask(task.id, { proof_note: event.target.value })}
+                            placeholder="What did you prove?"
+                            value={task.proof_note ?? ""}
+                          />
+                        </label>
+                        <button
+                          className="min-h-10 rounded-xl border border-[#9BB99B]/45 bg-[#5C7A5C]/14 px-3 text-xs font-semibold text-[#DDF0DD] transition hover:border-[#9BB99B]/70 hover:bg-[#5C7A5C]/24 disabled:cursor-not-allowed disabled:opacity-50"
+                          data-testid={`sprint-save-task-${task.task_order}`}
+                          disabled={sprintStatus === "saving"}
+                          onClick={() => saveSprintTask(task)}
+                          type="button"
+                        >
+                          {sprintStatus === "saving" ? "Saving..." : "Save proof"}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-[16px] border border-[#C77D2E]/35 bg-[#C77D2E]/10 px-3 py-3">
+                    <p className="text-xs leading-5 text-[#FFD8B0]">
+                      Skill improvement requires one proof link per task. Notes alone do not make a CV claim ready.
+                    </p>
+                    <button
+                      className="min-h-10 rounded-xl bg-[#2C7BE5] px-4 text-xs font-semibold text-white transition hover:bg-[#3B88F1] disabled:cursor-not-allowed disabled:opacity-50"
+                      data-testid="sprint-improve-skill"
+                      disabled={
+                        sprintStatus === "saving" ||
+                        sprint.status === "completed" ||
+                        sprint.tasks.length === 0 ||
+                        !sprint.tasks.every((task) => task.proof_url?.trim())
+                      }
+                      onClick={improveSkillFromSprint}
+                      type="button"
+                    >
+                      {sprint.status === "completed" ? "Skill improved" : "Improve skill"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-[16px] border border-dashed border-white/14 bg-[#303849]/45 px-4 py-5 text-sm leading-6 text-[#AEB6C2]">
+                  Create a {sprintDays}-day sprint for {selectedSprintSkill.skill}. The plan will be saved to your account so you can return with proof.
+                </div>
+              )}
             </div>
           ) : (
             <div className="rounded-[16px] border border-[#5C7A5C]/40 bg-[#5C7A5C]/14 px-4 py-3 text-sm text-[#DDF0DD]">

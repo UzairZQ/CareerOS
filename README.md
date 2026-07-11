@@ -11,7 +11,7 @@ It combines:
 - Local selectable-text PDF extraction for CV checks
 - Explicit CV text persistence in the user's private profile
 - An evidence map: required skill -> evidence -> confidence -> proof task
-- 3, 7, and 14-day learning sprints
+- Persisted 3, 7, and 14-day learning sprints with proof-gated skill improvement
 - Rule-based CV/ATS inspection
 - Evidence-backed application suggestions
 - Optional BYOK AI insights through authenticated server routes
@@ -67,6 +67,7 @@ After the base schema, run the migrations in:
 
 - [supabase/migrations/20260709_require_proof_for_cv_ready.sql](/Users/uzair99/Development/CareerOS/supabase/migrations/20260709_require_proof_for_cv_ready.sql), which keeps `is_cv_ready` false until a CV-ready evidence row has both an evidence summary and a proof link.
 - [supabase/migrations/20260710_add_cv_text_to_user_profiles.sql](/Users/uzair99/Development/CareerOS/supabase/migrations/20260710_add_cv_text_to_user_profiles.sql), which adds the private saved CV text field.
+- [supabase/migrations/20260710_add_learning_sprints.sql](/Users/uzair99/Development/CareerOS/supabase/migrations/20260710_add_learning_sprints.sql), which adds user-scoped sprint and task tables with RLS and a database proof constraint.
 
 Never commit `.env.local`, service-role credentials, database passwords, or provider API keys.
 
@@ -81,7 +82,7 @@ npm run build
 npm audit --audit-level=moderate
 ```
 
-The integration test uses temporary Supabase users and verifies RLS. The E2E tests cover login, signup metadata persistence, application CRUD, work-hour logging, profile saving, evidence persistence, local selectable-text PDF extraction, explicit CV save and reload persistence, CV check rendering, BYOK activation, empty-state rendering, and browser error detection.
+The integration test uses temporary Supabase users and verifies RLS, sprint persistence, and proof-gated task completion. The E2E tests cover login, signup metadata persistence, application CRUD, work-hour logging, profile saving, evidence persistence, local selectable-text PDF extraction, explicit CV save and reload persistence, Learning Sprint creation/proof/improvement, CV check rendering, BYOK activation, empty-state rendering, mobile overflow, and browser error detection.
 
 ## Optional AI
 

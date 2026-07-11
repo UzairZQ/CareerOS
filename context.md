@@ -123,6 +123,12 @@ integration and authenticated E2E suites. `user_profiles.cv_text` stores only
 the user's explicitly saved extracted/pasted CV text; PDF binaries are not
 uploaded by the CV workflow.
 
+The migration `supabase/migrations/20260710_add_learning_sprints.sql` was also
+applied to the connected live project. `learning_sprints` stores one plan per
+user/application/skill and `learning_sprint_tasks` stores ordered tasks and
+proof. RLS scopes both tables to the owning user, and a database check prevents
+`completed = true` without a proof URL or note.
+
 Current `applications` fields:
 - `id`
 - `user_id`
@@ -261,6 +267,7 @@ Current dashboard includes:
 - Work-hour logging/deletion and compliance summary
 - Rule-based JD analyzer and persisted Evidence Map
 - 3/7/14-day learning sprint generation
+- Persisted 3/7/14-day Learning Sprint plans with task proof and skill improvement
 - Rule-based CV/ATS inspection
 - Local PDF upload and selectable-text extraction into the ATS editor
 - Explicit CV text save and reload persistence through `user_profiles.cv_text`
@@ -431,6 +438,7 @@ Current production-hardening notes:
   - CV check module rendering
   - selectable-text PDF selection, local extraction, and ATS text-area update
   - explicit CV text save followed by page reload and value restoration
+  - Learning Sprint creation, task proof saves, and proof-gated skill improvement
   - invalid AI key validation without a provider call
   - valid temporary BYOK key activation refreshes AI insight buttons without an external model call
   - database verification after the UI mutation
@@ -442,6 +450,7 @@ Current production-hardening notes:
   - cross-user isolation check
   - profile upsert
   - saved CV text round-trip through `user_profiles.cv_text`
+  - Learning Sprint/task persistence, proof constraint, and cross-user RLS isolation
   - work-hour log insert
   - evidence upsert with generated `is_cv_ready`
   - cleanup of temporary users/rows
@@ -494,6 +503,10 @@ Verified across 2026-07-09 and 2026-07-10:
   not fabricate sample content for a new account.
 - The authenticated E2E assertion proves explicitly saved CV text is restored
   after a full page reload.
+- The authenticated E2E assertion proves a Learning Sprint can be created,
+  each task can receive proof, and the skill can only be improved afterward.
+- The mobile E2E assertion proves the dashboard has no document-level horizontal
+  overflow at 390x844.
 - The authenticated E2E assertion proves Evidence Map proof saves update the
   dashboard's live Evidence ready metric without a full-page reload.
 - Playwright runs with one worker to avoid creating concurrent confirmation-email requests against Supabase's provider quota.
