@@ -5,13 +5,20 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
   formatZodError,
+  updateApplicationRecordSchema,
   updateApplicationSchema,
+  type UpdateApplicationRecordInput,
 } from "@/lib/application-validation";
 import { createClient } from "@/lib/supabase/browser";
+import {
+  ApplicationRecordEditor,
+  type ApplicationRecordSaveState,
+} from "@/components/application-record-editor";
 
 export type ManagedApplication = {
   id: string;
   company: string;
+  job_description: string | null;
   role: string;
   location: string | null;
   url: string | null;
@@ -65,8 +72,12 @@ export function ApplicationManagementPanel({
   const router = useRouter();
   const [draftOverrides, setDraftOverrides] = useState<DraftOverrides>({});
   const [saveStateById, setSaveStateById] = useState<Record<string, SaveState>>({});
+  const [recordSaveStateById, setRecordSaveStateById] = useState<
+    Record<string, ApplicationRecordSaveState>
+  >({});
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [errorById, setErrorById] = useState<Record<string, string | null>>({});
+  const [recordErrorById, setRecordErrorById] = useState<Record<string, string | null>>({});
   const [deleteCandidateId, setDeleteCandidateId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<ManagedApplication["status"] | "all">("all");
   const [query, setQuery] = useState("");
@@ -79,7 +90,13 @@ export function ApplicationManagementPanel({
       const matchesStatus = statusFilter === "all" || draft.status === statusFilter;
       const matchesQuery =
         !normalizedQuery ||
-        [application.company, application.role, application.location, draft.notes]
+        [
+          application.company,
+          application.role,
+          application.location,
+          application.job_description,
+          draft.notes,
+        ]
           .filter(Boolean)
           .some((value) => value!.toLowerCase().includes(normalizedQuery));
 
@@ -136,6 +153,46 @@ export function ApplicationManagementPanel({
     }
 
     setSaveStateById((current) => ({ ...current, [application.id]: "saved" }));
+    router.refresh();
+  }
+
+  async function saveApplicationRecord(
+    application: ManagedApplication,
+    details: UpdateApplicationRecordInput,
+  ) {
+    const parsed = updateApplicationRecordSchema.safeParse(details);
+
+    if (!parsed.success) {
+      setRecordSaveStateById((current) => ({ ...current, [application.id]: "error" }));
+      setRecordErrorById((current) => ({
+        ...current,
+        [application.id]: formatZodError(parsed.error),
+      }));
+      return;
+    }
+
+    const supabase = createClient();
+    setRecordSaveStateById((current) => ({ ...current, [application.id]: "saving" }));
+    setRecordErrorById((current) => ({ ...current, [application.id]: null }));
+
+    const { error } = await supabase
+      .from("applications")
+      .update({
+        company: parsed.data.company,
+        job_description: parsed.data.job_description,
+        location: parsed.data.location,
+        role: parsed.data.role,
+        url: parsed.data.url,
+      })
+      .eq("id", application.id);
+
+    if (error) {
+      setRecordSaveStateById((current) => ({ ...current, [application.id]: "error" }));
+      setRecordErrorById((current) => ({ ...current, [application.id]: error.message }));
+      return;
+    }
+
+    setRecordSaveStateById((current) => ({ ...current, [application.id]: "saved" }));
     router.refresh();
   }
 
@@ -236,6 +293,8 @@ export function ApplicationManagementPanel({
             const draft = getApplicationDraft(application, draftOverrides);
             const state = saveStateById[application.id] ?? "idle";
             const error = errorById[application.id];
+            const recordSaveState = recordSaveStateById[application.id] ?? "idle";
+            const recordError = recordErrorById[application.id];
 
             return (
               <article
@@ -366,6 +425,15 @@ export function ApplicationManagementPanel({
                     {error || "Application updated."}
                   </p>
                 )}
+
+                <ApplicationRecordEditor
+                  application={application}
+                  error={recordError}
+                  key={application.id}
+                  onSave={(details) => saveApplicationRecord(application, details)}
+                  saveState={recordSaveState}
+                  tableReady={tableReady}
+                />
               </article>
             );
           })}

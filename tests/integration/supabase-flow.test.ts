@@ -126,15 +126,28 @@ describeIntegration("Supabase authenticated dashboard flow", () => {
 
     const { data: updated, error: updateError } = await userClient
       .from("applications")
-      .update({ notes: "Interview scheduled.", status: "interview" })
+      .update({
+        company: "CareerOS Integration Updated GmbH",
+        job_description: "Updated requirement: Next.js and TypeScript.",
+        location: "Berlin · Remote",
+        notes: "Interview scheduled.",
+        role: "Frontend Engineer",
+        status: "interview",
+        url: "https://example.com/updated-job",
+      })
       .eq("id", applicationId)
-      .select("status, notes")
+      .select("company, job_description, location, notes, role, status, url")
       .single();
 
     expect(updateError).toBeNull();
     expect(updated).toMatchObject({
+      company: "CareerOS Integration Updated GmbH",
+      job_description: "Updated requirement: Next.js and TypeScript.",
+      location: "Berlin · Remote",
       notes: "Interview scheduled.",
+      role: "Frontend Engineer",
       status: "interview",
+      url: "https://example.com/updated-job",
     });
   });
 

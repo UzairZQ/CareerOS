@@ -5,7 +5,7 @@ CareerOS is a full-stack job-search operating system for international students 
 It combines:
 
 - Supabase Auth and user profiles
-- Application tracking with status, follow-ups, notes, and search
+- Application tracking with editable source records, status, follow-ups, notes, and search
 - Germany-focused work-hour logging and allowance summaries
 - Deterministic job-description analysis
 - Local selectable-text PDF extraction for CV checks
@@ -83,7 +83,7 @@ npm run build
 npm audit --audit-level=moderate
 ```
 
-The integration test uses temporary Supabase users and verifies RLS, sprint persistence, and proof-gated task completion. The E2E tests cover login, signup metadata persistence, application CRUD, work-hour logging, profile saving, evidence persistence, local selectable-text PDF extraction, explicit CV save and reload persistence, Learning Sprint creation/proof/improvement, CV check rendering, BYOK activation, empty-state rendering, mobile overflow, and browser error detection.
+The integration test uses temporary Supabase users and verifies RLS, full application-record updates, sprint persistence, and proof-gated task completion. The E2E tests cover login, signup metadata persistence, application CRUD and source-record editing, work-hour logging, profile saving, evidence persistence, local selectable-text PDF extraction, explicit CV save and reload persistence, Learning Sprint creation/proof/improvement, CV check rendering, BYOK activation, empty-state rendering, mobile overflow, and browser error detection.
 
 ## Optional AI
 

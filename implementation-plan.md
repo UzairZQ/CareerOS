@@ -1,12 +1,13 @@
 # CareerOS Germany - Implementation Plan
 
-## Current Implementation Status (2026-07-10)
+## Current Implementation Status (2026-07-11)
 
 The first production-oriented vertical slice is implemented in the repository:
 
 - Next.js App Router with React and TypeScript is the confirmed framework choice.
 - Supabase Auth, PostgreSQL tables, and RLS are connected.
 - The protected dashboard contains applications, work hours, JD analysis, Evidence Map, learning sprints, CV check, Application Assistant, profile settings, and optional BYOK AI Insights.
+- The Job Tracker supports adding records, searching/filtering them, editing workflow state, and reopening the complete source record to update company, role, location, URL, or job description.
 - CV Check accepts selectable-text PDFs up to 5 MB and extracts their text locally with `pdfjs-dist`.
 - CV Check can explicitly save extracted/pasted CV text to the signed-in user's private `user_profiles` row and restores it on reload; PDF binaries are never uploaded by this workflow.
 - Learning Sprint now persists one active plan per application/skill, stores proof per task, and only improves the Evidence Map skill after every task has a proof link.
@@ -100,6 +101,7 @@ Learning goals:
 
 - Add job applications.
 - Store company, role, location, link, source, date applied, status, follow-up date, and notes.
+- Reopen an existing application and edit its source record, including the job description used by the analyzer.
 - Filter and sort by status/date.
 - Dashboard summaries such as total applications, response rate, interviews, rejections, offers, and upcoming follow-ups.
 

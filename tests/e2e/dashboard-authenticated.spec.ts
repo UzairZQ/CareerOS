@@ -158,6 +158,31 @@ test.describe("authenticated dashboard UI", () => {
     await page.getByRole("link", { exact: true, name: "Applications" }).click();
     await expect(page.locator(`#applications`)).toBeInViewport();
 
+    await page.getByTestId(`application-details-toggle-${applicationId}`).click();
+    await page.getByTestId(`application-company-${applicationId}`).fill("CareerOS E2E Updated GmbH");
+    await page.getByTestId(`application-role-${applicationId}`).fill("Frontend Engineer");
+    await page.getByTestId(`application-location-${applicationId}`).fill("Berlin · Remote");
+    await page.getByTestId(`application-url-${applicationId}`).fill("https://example.com/updated-job");
+    await page
+      .getByTestId(`application-job-description-${applicationId}`)
+      .fill("Required: React, Next.js and TypeScript.");
+    await page.getByTestId(`application-details-save-${applicationId}`).click();
+    await expect(page.getByText("Application record updated.", { exact: true })).toBeVisible();
+
+    const { data: updatedRecord, error: updatedRecordError } = await admin
+      .from("applications")
+      .select("company, job_description, location, role, url")
+      .eq("id", applicationId)
+      .single();
+    expect(updatedRecordError).toBeNull();
+    expect(updatedRecord).toMatchObject({
+      company: "CareerOS E2E Updated GmbH",
+      job_description: "Required: React, Next.js and TypeScript.",
+      location: "Berlin · Remote",
+      role: "Frontend Engineer",
+      url: "https://example.com/updated-job",
+    });
+
     await page.getByTestId(`application-status-${applicationId}`).selectOption("interview");
     await page.getByTestId(`application-follow-up-${applicationId}`).fill("2026-07-20");
     await page

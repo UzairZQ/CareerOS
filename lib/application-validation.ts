@@ -57,8 +57,20 @@ export const updateApplicationSchema = z.object({
   status: applicationStatusSchema,
 });
 
+// The record editor sends the complete editable job record in one update.
+// Keeping this schema separate lets the compact workflow editor continue to
+// validate only status, follow-up date, and notes.
+export const updateApplicationRecordSchema = z.object({
+  company: z.string().trim().min(1, "Company is required.").max(120),
+  job_description: optionalTrimmedString(12000),
+  location: optionalTrimmedString(160),
+  role: z.string().trim().min(1, "Role is required.").max(160),
+  url: optionalUrl,
+});
+
 export type CreateApplicationInput = z.infer<typeof createApplicationSchema>;
 export type UpdateApplicationInput = z.infer<typeof updateApplicationSchema>;
+export type UpdateApplicationRecordInput = z.infer<typeof updateApplicationRecordSchema>;
 
 export function formatZodError(error: z.ZodError) {
   return error.issues.map((issue) => issue.message).join(" ");

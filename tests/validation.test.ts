@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createApplicationSchema,
   updateApplicationSchema,
+  updateApplicationRecordSchema,
 } from "@/lib/application-validation";
 import {
   aiInsightRequestSchema,
@@ -70,6 +71,33 @@ describe("application validation", () => {
       notes: "Follow up after portfolio review.",
       status: "interview",
     });
+  });
+
+  it("validates the complete editable application record", () => {
+    const parsed = updateApplicationRecordSchema.parse({
+      company: "  SAP  ",
+      job_description: "  Build React dashboards.  ",
+      location: " Berlin ",
+      role: " Frontend Developer ",
+      url: " https://jobs.example.com/frontend ",
+    });
+
+    expect(parsed).toEqual({
+      company: "SAP",
+      job_description: "Build React dashboards.",
+      location: "Berlin",
+      role: "Frontend Developer",
+      url: "https://jobs.example.com/frontend",
+    });
+    expect(
+      updateApplicationRecordSchema.safeParse({
+        company: "SAP",
+        job_description: "",
+        location: "Berlin",
+        role: "Frontend Developer",
+        url: "javascript:alert(1)",
+      }).success,
+    ).toBe(false);
   });
 });
 

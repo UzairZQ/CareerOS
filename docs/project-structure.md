@@ -23,6 +23,7 @@ CareerOS/
     auth-panel.tsx
     add-application-form.tsx
     application-management-panel.tsx
+    application-record-editor.tsx
     work-hours-permit.tsx
     jd-evidence-workspace.tsx
     learning-sprint-panel.tsx
@@ -87,3 +88,4 @@ logic lives in `lib/`, and Supabase SQL/RLS lives in `supabase/`.
 - 2026-07-10: Added explicit CV text persistence through `user_profiles.cv_text`; selectable-text PDF extraction remains local, and the save/reload path is covered by live integration and authenticated E2E tests.
 - 2026-07-11: Added persisted Learning Sprint plans/tasks with per-task proof, database proof constraints, RLS isolation, proof-gated skill improvement, and mobile overflow regression coverage.
 - 2026-07-11: Added dashboard route-level loading and recoverable error boundaries for resilient server-rendered navigation.
+- 2026-07-11: Added a separate application record editor for complete job-field updates, with Zod validation, live Supabase verification, and authenticated browser coverage.

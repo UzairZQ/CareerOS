@@ -344,6 +344,7 @@ export default async function DashboardPage() {
                   company: application.company,
                   created_at: application.created_at,
                   follow_up_date: application.follow_up_date,
+                  job_description: application.job_description,
                   location: application.location,
                   notes: application.notes,
                   role: application.role,

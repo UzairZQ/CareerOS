@@ -1,6 +1,6 @@
 # CareerOS Context
 
-Last updated: 2026-07-10
+Last updated: 2026-07-11
 
 ## Project Summary
 
@@ -278,6 +278,7 @@ Current dashboard includes:
 - Supabase-backed application CRUD
 - Search and status filtering
 - Follow-up and notes editing
+- Complete application record editing for company, role, location, URL, and job description
 - Two-click delete confirmation
 - Work-hour logging/deletion and compliance summary
 - Rule-based JD analyzer and persisted Evidence Map
@@ -448,6 +449,7 @@ Current production-hardening notes:
   - dashboard module navigation
   - add-job form submission and database verification
   - application status, follow-up, and notes update
+  - complete application record editing and database verification
   - work-hour log submission and database verification
   - profile settings save
   - Evidence Map React proof save and database verification
@@ -462,7 +464,7 @@ Current production-hardening notes:
 - Current integration coverage includes:
   - temporary confirmed Supabase Auth user creation
   - sign-in with anon client
-  - RLS-protected application create/read/update
+  - RLS-protected application create/read/update, including complete record fields
   - cross-user isolation check
   - profile upsert
   - saved CV text round-trip through `user_profiles.cv_text`
@@ -510,9 +512,9 @@ Current production-hardening notes:
 Verified across 2026-07-09 and 2026-07-10:
 
 - `npm run lint` passed.
-- `npm test` passed: 17 tests passed, 3 intentionally skipped integration tests in the default run.
+- `npm test` passed: 19 tests passed, 3 intentionally skipped integration tests in the default run.
 - `npm run test:integration` passed: 3 real Supabase tests passed.
-- The isolated signup E2E passed with metadata persistence. The full single-worker Chromium suite passed the dashboard flow and transparently skipped signup when Supabase email-send rate limiting was active.
+- The full single-worker Chromium suite passed 2 authenticated dashboard tests and transparently skipped signup when Supabase email-send rate limiting was active.
 - `npm run build` passed with Next.js 16.2.10 using webpack.
 - `npm audit --audit-level=moderate` reported 0 vulnerabilities.
 - Browser inspection at the default 1280x720 viewport showed the dashboard content in an internal scroll region.
@@ -579,6 +581,7 @@ Dashboard:
 app/dashboard/page.tsx
 components/add-application-form.tsx
 components/application-management-panel.tsx
+components/application-record-editor.tsx
 components/application-assistant-panel.tsx
 components/cv-check-panel.tsx
 components/dashboard-analytics-panel.tsx
