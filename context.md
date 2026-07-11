@@ -55,6 +55,11 @@ application, work-hour, and AI-settings queries in parallel, then loads
 application-scoped evidence and calculates analytics before the page composes
 the React modules.
 
+The JD/Evidence workspace keeps its server-backed mutation logic in the parent
+but renders the Learning Sprint through `components/learning-sprint-panel.tsx`.
+The child owns presentation, while the parent owns persistence and evidence
+state through typed props and callbacks.
+
 Installed dependencies added during auth work:
 - `@supabase/ssr`
 - `@supabase/supabase-js`
@@ -472,6 +477,8 @@ Current production-hardening notes:
 - Dashboard server data loading and query orchestration live in
   `lib/server/dashboard-data.ts`, keeping `app/dashboard/page.tsx` focused on
   route composition.
+- Learning Sprint rendering lives in `components/learning-sprint-panel.tsx`,
+  reducing the JD/Evidence workspace while keeping its proof callbacks typed.
 - `/api/ai-settings` validates JSON/provider/key payloads server-side and rejects unauthenticated requests before writes.
 - `/api/ai-insight` rejects malformed/oversized payloads, uses authenticated per-user encrypted keys, and applies a 30-second provider timeout.
 - Auth provider errors are normalized into user-friendly messages, including a clear email-send rate-limit state.
