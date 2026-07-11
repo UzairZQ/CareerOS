@@ -127,7 +127,7 @@ Learning goals:
 - Date handling.
 - Aggregations.
 - Compliance-style calculations.
-- Recharts or another charting library.
+- A charting library can be added later if the custom SVG analytics no longer serves the dashboard.
 - Clear warning/error states.
 
 ### 4. ATS Checker
@@ -260,8 +260,8 @@ Confirmed implementation:
 - Backend/database/auth: Supabase.
 - Database: PostgreSQL through Supabase.
 - Validation: Zod.
-- Forms: React Hook Form.
-- Charts: Recharts.
+- Forms: native controlled React inputs and `FormData`; React Hook Form is not installed yet.
+- Charts: small custom SVG analytics; Recharts is not installed yet.
 - ATS parsing: pdf.js.
 - CV persistence: extracted text saved explicitly to `user_profiles.cv_text`; no PDF binary storage in the MVP.
 - Optional AI: Gemini first, with Groq and OpenRouter as Bring Your Own Key alternatives.
