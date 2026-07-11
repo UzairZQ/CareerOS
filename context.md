@@ -60,6 +60,10 @@ but renders the Learning Sprint through `components/learning-sprint-panel.tsx`.
 The child owns presentation, while the parent owns persistence and evidence
 state through typed props and callbacks.
 
+The Evidence Map table follows the same boundary in
+`components/evidence-map-table.tsx`: row inputs and status visuals live in the
+child, while `jd-evidence-workspace.tsx` owns the validated save callback.
+
 Installed dependencies added during auth work:
 - `@supabase/ssr`
 - `@supabase/supabase-js`
@@ -479,6 +483,8 @@ Current production-hardening notes:
   route composition.
 - Learning Sprint rendering lives in `components/learning-sprint-panel.tsx`,
   reducing the JD/Evidence workspace while keeping its proof callbacks typed.
+- Evidence Map row rendering lives in `components/evidence-map-table.tsx`,
+  keeping confidence styling and row controls out of the parent workspace.
 - `/api/ai-settings` validates JSON/provider/key payloads server-side and rejects unauthenticated requests before writes.
 - `/api/ai-insight` rejects malformed/oversized payloads, uses authenticated per-user encrypted keys, and applies a 30-second provider timeout.
 - Auth provider errors are normalized into user-friendly messages, including a clear email-send rate-limit state.

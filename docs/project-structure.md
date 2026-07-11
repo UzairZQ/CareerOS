@@ -26,6 +26,7 @@ CareerOS/
     work-hours-permit.tsx
     jd-evidence-workspace.tsx
     learning-sprint-panel.tsx
+    evidence-map-table.tsx
     cv-check-panel.tsx
     application-assistant-panel.tsx
     profile-settings-panel.tsx
