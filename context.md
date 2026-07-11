@@ -274,6 +274,7 @@ Current dashboard includes:
 - Evidence-backed application suggestions
 - User profile settings
 - Optional encrypted BYOK AI settings and inline insights
+- Route-level dashboard loading skeleton and recoverable error boundary
 - Honest empty state when a new user has no applications; no fabricated job cards
 - Empty CV, JD, and assistant states do not prefill sample user/job content
 - Table-not-ready warnings if a schema query errors
@@ -501,6 +502,8 @@ Verified across 2026-07-09 and 2026-07-10:
   into the ATS analyzer without a server upload.
 - The empty-module E2E assertions prove CV Check, Skill Gap, and Assistant do
   not fabricate sample content for a new account.
+- `app/dashboard/loading.tsx` and `app/dashboard/error.tsx` provide the
+  Next.js route-level loading and recovery states for dashboard server renders.
 - The authenticated E2E assertion proves explicitly saved CV text is restored
   after a full page reload.
 - The authenticated E2E assertion proves a Learning Sprint can be created,

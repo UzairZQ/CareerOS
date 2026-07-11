@@ -15,6 +15,7 @@ It combines:
 - Rule-based CV/ATS inspection
 - Evidence-backed application suggestions
 - Optional BYOK AI insights through authenticated server routes
+- Route-level loading and recoverable dashboard error states
 
 The product works without AI. AI is an optional enrichment layer, not the source of truth.
 

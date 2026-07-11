@@ -14,6 +14,8 @@ CareerOS/
       ai-settings/route.ts
     auth/callback/route.ts
     dashboard/page.tsx
+    dashboard/loading.tsx
+    dashboard/error.tsx
     globals.css
     layout.tsx
     page.tsx
@@ -80,3 +82,4 @@ logic lives in `lib/`, and Supabase SQL/RLS lives in `supabase/`.
 - 2026-07-09: Implemented the Supabase-backed auth/dashboard vertical slice, optional BYOK AI routes, authenticated E2E coverage, proof-link enforcement, honest empty state, local selectable-text PDF extraction, live proof-link migration verification, and production verification gates.
 - 2026-07-10: Added explicit CV text persistence through `user_profiles.cv_text`; selectable-text PDF extraction remains local, and the save/reload path is covered by live integration and authenticated E2E tests.
 - 2026-07-11: Added persisted Learning Sprint plans/tasks with per-task proof, database proof constraints, RLS isolation, proof-gated skill improvement, and mobile overflow regression coverage.
+- 2026-07-11: Added dashboard route-level loading and recoverable error boundaries for resilient server-rendered navigation.
