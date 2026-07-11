@@ -25,11 +25,9 @@ import { JdEvidenceWorkspace } from "@/components/jd-evidence-workspace";
 import { ProfileSettingsPanel } from "@/components/profile-settings-panel";
 import { SignOutButton } from "@/components/sign-out-button";
 import { WorkHoursPermit } from "@/components/work-hours-permit";
-import { calculateDashboardAnalytics } from "@/lib/dashboard-analytics";
-import type { AiProvider } from "@/lib/ai-providers";
+import { loadDashboardData } from "@/lib/server/dashboard-data";
 import { createClient } from "@/lib/supabase/server";
 import { calculateProfileReadiness, type UserProfileData } from "@/lib/user-profile";
-import { getYearRange, type WorkHourLog } from "@/lib/work-hours";
 
 const navItems = [
   { label: "Overview", icon: SlidersHorizontal, href: "#overview" },
@@ -52,37 +50,6 @@ type DashboardApplicationCard = {
   image: string;
 };
 
-type ApplicationRecord = {
-  id: string;
-  company: string;
-  role: string;
-  location: string | null;
-  url: string | null;
-  status: "saved" | "applied" | "interview" | "rejected" | "offer";
-  follow_up_date: string | null;
-  job_description: string | null;
-  notes: string | null;
-  created_at: string;
-};
-
-type EvidenceRecord = {
-  application_id: string | null;
-  skill: string;
-  evidence_summary: string | null;
-  confidence: "direct" | "bridge" | "basic" | "learning" | "missing";
-  proof_url: string | null;
-};
-
-type WorkHourRecord = WorkHourLog;
-
-type AiProviderSettingRecord = {
-  provider: AiProvider;
-  key_hint: string | null;
-  enabled: boolean;
-};
-
-type UserProfileRecord = UserProfileData;
-
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
@@ -101,11 +68,19 @@ export default async function DashboardPage() {
     typeof user.user_metadata.target_role === "string" && user.user_metadata.target_role
       ? user.user_metadata.target_role
       : null;
-  const { data: userProfile, error: userProfileError } = await supabase
-    .from("user_profiles")
-    .select("full_name, current_city, work_authorization, languages, target_roles, profile_note, cv_text")
-    .eq("user_id", user.id)
-    .maybeSingle<UserProfileRecord>();
+  const {
+    aiProviderSettings,
+    aiProviderSettingsError,
+    analytics,
+    applicationsError,
+    evidenceError,
+    storedApplications,
+    storedEvidence,
+    userProfile,
+    userProfileError,
+    workHourLogs,
+    workHourLogsError,
+  } = await loadDashboardData(supabase, user.id);
   const profile: UserProfileData = {
     current_city: userProfile?.current_city ?? null,
     full_name: userProfile?.full_name ?? metadataFullName,
@@ -129,42 +104,7 @@ export default async function DashboardPage() {
     .join("")
     .slice(0, 2)
     .toUpperCase();
-  const { data: storedApplications, error: applicationsError } = await supabase
-    .from("applications")
-    .select("id, company, role, location, url, status, follow_up_date, job_description, notes, created_at")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .returns<ApplicationRecord[]>();
-  const applicationIds = (storedApplications ?? []).map((application) => application.id);
-  const { data: storedEvidence, error: evidenceError } =
-    applicationIds.length > 0
-      ? await supabase
-          .from("evidence_items")
-          .select("application_id, skill, evidence_summary, confidence, proof_url")
-          .eq("user_id", user.id)
-          .in("application_id", applicationIds)
-          .returns<EvidenceRecord[]>()
-      : { data: [] as EvidenceRecord[], error: null };
-  const yearRange = getYearRange();
-  const { data: workHourLogs, error: workHourLogsError } = await supabase
-    .from("work_hour_logs")
-    .select("id, work_date, employer, hours, day_type, notes")
-    .eq("user_id", user.id)
-    .gte("work_date", yearRange.start)
-    .lte("work_date", yearRange.end)
-    .order("work_date", { ascending: false })
-    .returns<WorkHourRecord[]>();
-  const { data: aiProviderSettings, error: aiProviderSettingsError } = await supabase
-    .from("ai_provider_settings")
-    .select("provider, key_hint, enabled")
-    .eq("user_id", user.id)
-    .eq("enabled", true)
-    .returns<AiProviderSettingRecord[]>();
-  const analytics = calculateDashboardAnalytics({
-    applications: storedApplications ?? [],
-    evidence: storedEvidence ?? [],
-  });
-  const dashboardApplications: DashboardApplicationCard[] = (storedApplications ?? []).map(
+  const dashboardApplications: DashboardApplicationCard[] = storedApplications.map(
     (application) => ({
       company: application.company,
       role: application.role,

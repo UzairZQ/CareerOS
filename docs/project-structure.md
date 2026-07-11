@@ -41,7 +41,9 @@ CareerOS/
     auth-errors.ts
     auth-navigation.ts
     supabase/
-    server/secret-crypto.ts
+    server/
+      dashboard-data.ts
+      secret-crypto.ts
   supabase/
     schema.sql
     migrations/20260709_require_proof_for_cv_ready.sql

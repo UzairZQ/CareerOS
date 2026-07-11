@@ -15,6 +15,7 @@ The first production-oriented vertical slice is implemented in the repository:
 - Evidence Map proof saves refresh the server-rendered analytics so evidence progress is visible immediately.
 - OAuth callback navigation and optional AI request bodies are validated against malicious or malformed input.
 - The protected dashboard has a route-level loading skeleton and a recoverable error boundary so slow or failed server renders do not become a blank screen.
+- Dashboard query orchestration now lives in the server-only `lib/server/dashboard-data.ts` layer; the route focuses on authentication, profile fallback, and component composition.
 - The base product is rule-based and works without AI.
 - Automated verification covers unit validation, real Supabase integration, authenticated browser workflows, responsive runtime inspection, production build, lint, and dependency audit.
 

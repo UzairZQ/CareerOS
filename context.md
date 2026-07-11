@@ -49,6 +49,12 @@ Current stack:
 - `pdfjs-dist` for local text extraction from selectable-text CV PDFs
 - `lucide-react`
 
+Dashboard data access is intentionally separated into the server-only
+`lib/server/dashboard-data.ts` module. It runs independent profile,
+application, work-hour, and AI-settings queries in parallel, then loads
+application-scoped evidence and calculates analytics before the page composes
+the React modules.
+
 Installed dependencies added during auth work:
 - `@supabase/ssr`
 - `@supabase/supabase-js`
@@ -463,6 +469,9 @@ Current production-hardening notes:
 - Dashboard mutations now use Zod validation:
   - application create/update: `lib/application-validation.ts`
   - profile, work-hour logs, evidence rows, AI provider settings: `lib/dashboard-validation.ts`
+- Dashboard server data loading and query orchestration live in
+  `lib/server/dashboard-data.ts`, keeping `app/dashboard/page.tsx` focused on
+  route composition.
 - `/api/ai-settings` validates JSON/provider/key payloads server-side and rejects unauthenticated requests before writes.
 - `/api/ai-insight` rejects malformed/oversized payloads, uses authenticated per-user encrypted keys, and applies a 30-second provider timeout.
 - Auth provider errors are normalized into user-friendly messages, including a clear email-send rate-limit state.
