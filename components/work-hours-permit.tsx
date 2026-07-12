@@ -95,7 +95,7 @@ export function WorkHoursPermit({ logs, tableReady = true, userId }: WorkHoursPe
   }
 
   return (
-    <article className="relative overflow-hidden rounded-[22px] bg-[#2C7BE5] p-5 shadow-soft-blue">
+    <article className="dashboard-card-permit relative overflow-hidden rounded-[22px] p-5 shadow-soft-blue">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="mb-4 flex items-center gap-4 text-xs uppercase tracking-wide text-white/80">

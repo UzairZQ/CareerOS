@@ -164,7 +164,7 @@ export default async function DashboardPage() {
           <DashboardNavigation variant="mobile" />
 
           <section
-            className="mb-5 scroll-mt-5 rounded-[20px] bg-[#252B36] p-4 shadow-dashboard-card md:p-5"
+            className="dashboard-card-tint dashboard-card-blue mb-5 scroll-mt-5 rounded-[20px] p-4 shadow-dashboard-card md:p-5"
             id="overview"
           >
             <div className="mb-3 flex items-center justify-between">
@@ -191,11 +191,13 @@ export default async function DashboardPage() {
               <MiniStatusCard
                 label="Next follow-up"
                 title={analytics.nextFollowUpLabel}
+                tone="clay"
                 value={analytics.nextFollowUpCompany}
               />
               <MiniStatusCard
                 label="Response rate"
                 title={`${analytics.responseRate}%`}
+                tone="sage"
                 value={`${analytics.totalApplications} applications`}
               />
             </div>
@@ -227,7 +229,7 @@ export default async function DashboardPage() {
                 <EmptyApplicationsCard />
               )}
 
-              <article className="card-sheen rounded-[22px] p-4">
+              <article className="dashboard-card-tint dashboard-card-plum rounded-[22px] p-4">
                 <p className="mb-3 text-center text-lg font-medium text-white/90">
                   Skill gap grade
                 </p>
@@ -391,14 +393,16 @@ export default async function DashboardPage() {
 function MiniStatusCard({
   label,
   title,
+  tone,
   value,
 }: {
   label: string;
   title: string;
+  tone: "clay" | "sage";
   value: string;
 }) {
   return (
-    <article className="h-full rounded-[22px] border border-white/10 bg-[#303849] p-5">
+    <article className={`dashboard-card-tint dashboard-card-${tone} h-full rounded-[22px] p-5`}>
       <div className="mb-5 grid h-10 w-10 place-items-center rounded-full bg-white/5 text-white/75">
         <ShieldCheck size={21} strokeWidth={1.8} />
       </div>
@@ -415,7 +419,15 @@ function ApplicationCard({
   application: DashboardApplicationCard;
 }) {
   return (
-    <article className="overflow-hidden rounded-[22px] bg-[#303849] shadow-dashboard-card">
+    <article
+      className={`dashboard-card-tint overflow-hidden rounded-[22px] shadow-dashboard-card ${
+        application.status === "interview" || application.status === "offer"
+          ? "dashboard-card-sage"
+          : application.status === "rejected"
+            ? "dashboard-card-clay"
+            : "dashboard-card-blue"
+      }`}
+    >
       <div
         className="h-20 p-4"
         style={{ background: application.image }}
@@ -441,7 +453,7 @@ function ApplicationCard({
 
 function EmptyApplicationsCard() {
   return (
-    <article className="card-sheen flex min-h-[238px] flex-col justify-between rounded-[22px] p-5 xl:col-span-2">
+    <article className="dashboard-card-tint dashboard-card-clay flex min-h-[238px] flex-col justify-between rounded-[22px] p-5 xl:col-span-2">
       <div>
         <p className="mb-3 font-mono text-xs uppercase tracking-[0.14em] text-[#AEB6C2]">
           No applications yet

@@ -5,7 +5,7 @@ import type { DashboardAnalytics } from "@/lib/dashboard-analytics";
 export function DashboardAnalyticsPanel({ analytics }: { analytics: DashboardAnalytics }) {
   return (
     <section className="mt-5 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-      <article className="card-sheen rounded-[22px] border border-white/10 p-4 shadow-dashboard-card md:p-5">
+      <article className="card-sheen dashboard-card-tint dashboard-card-blue rounded-[22px] border border-white/10 p-4 shadow-dashboard-card md:p-5">
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <p className="mb-1 flex items-center gap-2 text-sm font-medium uppercase tracking-[0.14em] text-[#AEB6C2]">
@@ -63,7 +63,7 @@ export function DashboardAnalyticsPanel({ analytics }: { analytics: DashboardAna
         </div>
       </article>
 
-      <article className="card-sheen rounded-[22px] border border-white/10 p-4 shadow-dashboard-card md:p-5">
+      <article className="card-sheen dashboard-card-tint dashboard-card-plum rounded-[22px] border border-white/10 p-4 shadow-dashboard-card md:p-5">
         <div className="grid gap-4 lg:grid-cols-3">
           <AnalyticsList title="Top requested skills" items={analytics.mostRequestedSkills} tone="blue" />
           <AnalyticsList title="Common missing skills" items={analytics.mostMissingSkills} tone="amber" />

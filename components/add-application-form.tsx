@@ -75,7 +75,7 @@ export function AddApplicationForm({ userId }: AddApplicationFormProps) {
   }
 
   return (
-    <div className="mb-5 rounded-[22px] border border-white/10 bg-[#252B36] p-4">
+    <div className="dashboard-card-tint dashboard-card-clay mb-5 rounded-[22px] p-4">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="font-serif text-2xl font-normal tracking-[-0.01em]">

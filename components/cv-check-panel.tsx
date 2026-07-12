@@ -145,7 +145,7 @@ export function CvCheckPanel({
 
   return (
     <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-      <article className="card-sheen rounded-[22px] border border-white/10 p-4 shadow-dashboard-card md:p-5">
+      <article className="card-sheen dashboard-card-tint dashboard-card-rose rounded-[22px] border border-white/10 p-4 shadow-dashboard-card md:p-5">
         <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="mb-1 flex items-center gap-2 text-sm font-medium uppercase tracking-[0.14em] text-[#AEB6C2]">
@@ -239,7 +239,7 @@ export function CvCheckPanel({
         </label>
       </article>
 
-      <article className="card-sheen rounded-[22px] border border-white/10 p-4 shadow-dashboard-card md:p-5">
+      <article className="card-sheen dashboard-card-tint dashboard-card-plum rounded-[22px] border border-white/10 p-4 shadow-dashboard-card md:p-5">
         <div className="mb-4 grid gap-3 md:grid-cols-3">
           <InspectionMetric label="Matched keywords" value={String(cvCheck.keywordMatches.length)} />
           <InspectionMetric label="Missing keywords" value={String(cvCheck.missingKeywords.length)} />

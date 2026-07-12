@@ -42,7 +42,7 @@ export function JdAnalyzerPanel({
   sprintSkills: SkillMatch[];
 }) {
   return (
-    <article className="card-sheen rounded-[22px] border border-white/10 p-4 shadow-dashboard-card md:p-5">
+    <article className="card-sheen dashboard-card-tint dashboard-card-plum rounded-[22px] p-4 shadow-dashboard-card md:p-5">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <p className="mb-1 flex items-center gap-2 text-sm font-medium uppercase tracking-[0.14em] text-[#AEB6C2]">
@@ -169,7 +169,7 @@ export function EvidenceMapPanel({
   sprintStatus: SprintStatus;
 }) {
   return (
-    <article className="card-sheen rounded-[22px] border border-white/10 p-4 shadow-dashboard-card md:p-5">
+    <article className="card-sheen dashboard-card-tint dashboard-card-sage rounded-[22px] p-4 shadow-dashboard-card md:p-5">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="mb-1 flex items-center gap-2 text-sm font-medium uppercase tracking-[0.14em] text-[#AEB6C2]">
