@@ -13,6 +13,7 @@ const optionalTrimmedString = (max: number) =>
     .string()
     .trim()
     .max(max)
+    .optional()
     .transform((value) => value || null);
 
 const optionalUrl = z
@@ -34,6 +35,7 @@ const optionalUrl = z
 const optionalDate = z
   .string()
   .trim()
+  .optional()
   .transform((value) => value || null)
   .refine((value) => {
     if (!value) return true;
@@ -41,12 +43,14 @@ const optionalDate = z
   }, "Use a valid date.");
 
 export const createApplicationSchema = z.object({
+  applied_date: optionalDate,
   company: z.string().trim().min(1, "Company is required.").max(120),
   follow_up_date: optionalDate,
   job_description: optionalTrimmedString(12000),
   location: optionalTrimmedString(160),
   notes: optionalTrimmedString(4000),
   role: z.string().trim().min(1, "Role is required.").max(160),
+  source: optionalTrimmedString(120),
   status: applicationStatusSchema,
   url: optionalUrl,
 });
@@ -61,10 +65,12 @@ export const updateApplicationSchema = z.object({
 // Keeping this schema separate lets the compact workflow editor continue to
 // validate only status, follow-up date, and notes.
 export const updateApplicationRecordSchema = z.object({
+  applied_date: optionalDate,
   company: z.string().trim().min(1, "Company is required.").max(120),
   job_description: optionalTrimmedString(12000),
   location: optionalTrimmedString(160),
   role: z.string().trim().min(1, "Role is required.").max(160),
+  source: optionalTrimmedString(120),
   url: optionalUrl,
 });
 

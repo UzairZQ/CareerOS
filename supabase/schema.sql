@@ -8,6 +8,8 @@ create table if not exists public.applications (
   location text,
   url text,
   job_description text,
+  source text,
+  applied_date date,
   status text not null default 'saved'
     check (status in ('saved', 'applied', 'interview', 'rejected', 'offer')),
   follow_up_date date,

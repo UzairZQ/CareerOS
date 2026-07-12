@@ -142,17 +142,20 @@ test.describe("authenticated dashboard UI", () => {
     await page.getByLabel("Company", { exact: true }).fill("CareerOS E2E Added GmbH");
     await page.getByLabel("Role", { exact: true }).fill("Junior Web Developer");
     await page.getByLabel("Location", { exact: true }).fill("Frankfurt · Hybrid");
+    await page.getByLabel("Source", { exact: true }).fill("Company site");
+    await page.getByLabel("Applied date", { exact: true }).fill("2026-07-11");
     await page.getByLabel("Job description", { exact: true }).fill("Required: React and TypeScript.");
     await page.getByRole("button", { exact: true, name: "Save application" }).click();
     await expect(page.getByRole("heading", { exact: true, name: "CareerOS E2E Added GmbH" })).toBeVisible();
 
     const { data: createdApplication, error: createdApplicationError } = await admin
       .from("applications")
-      .select("id")
+      .select("id, applied_date, source")
       .eq("user_id", userId)
       .eq("company", "CareerOS E2E Added GmbH")
       .single();
     expect(createdApplicationError).toBeNull();
+    expect(createdApplication).toMatchObject({ applied_date: "2026-07-11", source: "Company site" });
     createdApplicationId = createdApplication!.id;
 
     await page.getByRole("link", { exact: true, name: "Applications" }).click();
@@ -163,6 +166,8 @@ test.describe("authenticated dashboard UI", () => {
     await page.getByTestId(`application-role-${applicationId}`).fill("Frontend Engineer");
     await page.getByTestId(`application-location-${applicationId}`).fill("Berlin · Remote");
     await page.getByTestId(`application-url-${applicationId}`).fill("https://example.com/updated-job");
+    await page.getByTestId(`application-source-${applicationId}`).fill("LinkedIn");
+    await page.getByTestId(`application-applied-date-${applicationId}`).fill("2026-07-12");
     await page
       .getByTestId(`application-job-description-${applicationId}`)
       .fill("Required: React, Next.js and TypeScript.");
@@ -171,15 +176,17 @@ test.describe("authenticated dashboard UI", () => {
 
     const { data: updatedRecord, error: updatedRecordError } = await admin
       .from("applications")
-      .select("company, job_description, location, role, url")
+      .select("applied_date, company, job_description, location, role, source, url")
       .eq("id", applicationId)
       .single();
     expect(updatedRecordError).toBeNull();
     expect(updatedRecord).toMatchObject({
+      applied_date: "2026-07-12",
       company: "CareerOS E2E Updated GmbH",
       job_description: "Required: React, Next.js and TypeScript.",
       location: "Berlin · Remote",
       role: "Frontend Engineer",
+      source: "LinkedIn",
       url: "https://example.com/updated-job",
     });
 

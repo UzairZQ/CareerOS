@@ -1,6 +1,6 @@
 # CareerOS Germany - Implementation Plan
 
-## Current Implementation Status (2026-07-11)
+## Current Implementation Status (2026-07-12)
 
 The first production-oriented vertical slice is implemented in the repository:
 
@@ -8,6 +8,7 @@ The first production-oriented vertical slice is implemented in the repository:
 - Supabase Auth, PostgreSQL tables, and RLS are connected.
 - The protected dashboard contains applications, work hours, JD analysis, Evidence Map, learning sprints, CV check, Application Assistant, profile settings, and optional BYOK AI Insights.
 - The Job Tracker supports adding records, searching/filtering them, editing workflow state, and reopening the complete source record to update company, role, location, URL, or job description.
+- Applications also persist an optional source and applied date for useful search history and follow-up analysis.
 - CV Check accepts selectable-text PDFs up to 5 MB and extracts their text locally with `pdfjs-dist`.
 - CV Check can explicitly save extracted/pasted CV text to the signed-in user's private `user_profiles` row and restores it on reload; PDF binaries are never uploaded by this workflow.
 - Learning Sprint now persists one active plan per application/skill, stores proof per task, and only improves the Evidence Map skill after every task has a proof link.
@@ -35,6 +36,10 @@ and verified by the live integration and authenticated browser suites.
 
 The Learning Sprint migration has also been applied to the connected Supabase
 project and verified by the live integration and authenticated browser suites.
+
+The application metadata migration has also been applied to the connected
+Supabase project and verified by the live integration and authenticated browser
+suites.
 
 ## What This Project Is
 
@@ -261,7 +266,7 @@ Confirmed implementation:
 - Frontend: React.
 - Framework and routing: Next.js App Router.
 - Language: TypeScript.
-- Styling: Tailwind CSS with custom components; shadcn/ui remains optional and is not currently installed.
+- Styling: Tailwind CSS with custom components; shadcn/ui is intentionally deferred until a complex accessible primitive justifies adding it.
 - Backend/database/auth: Supabase.
 - Database: PostgreSQL through Supabase.
 - Validation: Zod.

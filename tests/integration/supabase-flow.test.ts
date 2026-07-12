@@ -99,21 +99,25 @@ describeIntegration("Supabase authenticated dashboard flow", () => {
     const { data: created, error: createError } = await userClient
       .from("applications")
       .insert({
+        applied_date: "2026-07-14",
         company: "CareerOS Integration GmbH",
         follow_up_date: "2026-07-16",
         job_description: "Required: React, TypeScript, Supabase.",
         location: "Frankfurt · Hybrid",
         notes: "Created by integration test.",
         role: "Frontend Working Student",
+        source: "Company site",
         status: "saved",
         url: "https://example.com/job",
         user_id: userId,
       })
-      .select("id, status, follow_up_date")
+      .select("id, applied_date, source, status, follow_up_date")
       .single();
 
     expect(createError).toBeNull();
     expect(created?.status).toBe("saved");
+    expect(created?.applied_date).toBe("2026-07-14");
+    expect(created?.source).toBe("Company site");
     applicationId = created!.id;
 
     const { data: otherRead, error: otherReadError } = await otherClient
@@ -127,25 +131,29 @@ describeIntegration("Supabase authenticated dashboard flow", () => {
     const { data: updated, error: updateError } = await userClient
       .from("applications")
       .update({
+        applied_date: "2026-07-15",
         company: "CareerOS Integration Updated GmbH",
         job_description: "Updated requirement: Next.js and TypeScript.",
         location: "Berlin · Remote",
         notes: "Interview scheduled.",
         role: "Frontend Engineer",
+        source: "LinkedIn",
         status: "interview",
         url: "https://example.com/updated-job",
       })
       .eq("id", applicationId)
-      .select("company, job_description, location, notes, role, status, url")
+      .select("applied_date, company, job_description, location, notes, role, source, status, url")
       .single();
 
     expect(updateError).toBeNull();
     expect(updated).toMatchObject({
+      applied_date: "2026-07-15",
       company: "CareerOS Integration Updated GmbH",
       job_description: "Updated requirement: Next.js and TypeScript.",
       location: "Berlin · Remote",
       notes: "Interview scheduled.",
       role: "Frontend Engineer",
+      source: "LinkedIn",
       status: "interview",
       url: "https://example.com/updated-job",
     });

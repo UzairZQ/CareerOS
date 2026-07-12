@@ -7,9 +7,11 @@ import type { UserProfileData } from "@/lib/user-profile";
 import { getYearRange, type WorkHourLog } from "@/lib/work-hours";
 
 export type ApplicationRecord = {
+  applied_date: string | null;
   id: string;
   company: string;
   role: string;
+  source: string | null;
   location: string | null;
   url: string | null;
   status: "saved" | "applied" | "interview" | "rejected" | "offer";
@@ -60,7 +62,7 @@ export async function loadDashboardData(
       .maybeSingle<UserProfileData>(),
     supabase
       .from("applications")
-      .select("id, company, role, location, url, status, follow_up_date, job_description, notes, created_at")
+      .select("id, company, role, location, url, status, applied_date, follow_up_date, job_description, notes, source, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .returns<ApplicationRecord[]>(),

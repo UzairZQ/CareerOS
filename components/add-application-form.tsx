@@ -28,12 +28,14 @@ export function AddApplicationForm({ userId }: AddApplicationFormProps) {
     const form = event.currentTarget;
     const formData = new FormData(form);
     const parsed = createApplicationSchema.safeParse({
+      applied_date: String(formData.get("applied_date") ?? ""),
       company: String(formData.get("company") ?? ""),
       follow_up_date: String(formData.get("follow_up_date") ?? ""),
       job_description: String(formData.get("job_description") ?? ""),
       location: String(formData.get("location") ?? ""),
       notes: String(formData.get("notes") ?? ""),
       role: String(formData.get("role") ?? ""),
+      source: String(formData.get("source") ?? ""),
       status: String(formData.get("status") ?? "saved"),
       url: String(formData.get("url") ?? ""),
     });
@@ -47,6 +49,7 @@ export function AddApplicationForm({ userId }: AddApplicationFormProps) {
     const supabase = createClient();
 
     const { error: insertError } = await supabase.from("applications").insert({
+      applied_date: parsed.data.applied_date,
       user_id: userId,
       company: parsed.data.company,
       follow_up_date: parsed.data.follow_up_date,
@@ -54,6 +57,7 @@ export function AddApplicationForm({ userId }: AddApplicationFormProps) {
       location: parsed.data.location,
       notes: parsed.data.notes,
       role: parsed.data.role,
+      source: parsed.data.source,
       status: parsed.data.status,
       url: parsed.data.url,
     });
@@ -102,6 +106,8 @@ export function AddApplicationForm({ userId }: AddApplicationFormProps) {
           />
           <DashboardField label="Location" name="location" placeholder="Berlin · Hybrid" />
           <DashboardField label="Job URL" name="url" placeholder="https://..." type="url" />
+          <DashboardField label="Source" name="source" placeholder="LinkedIn, company site, university board..." />
+          <DashboardField label="Applied date" name="applied_date" type="date" />
 
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-white/78">Status</span>

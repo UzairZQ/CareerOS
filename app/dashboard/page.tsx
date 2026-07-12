@@ -109,8 +109,10 @@ export default async function DashboardPage() {
       company: application.company,
       role: application.role,
       location: application.location || "Location not set",
-      meta: application.follow_up_date
-        ? `Follow up ${application.follow_up_date}`
+      meta: application.applied_date
+        ? `Applied ${application.applied_date}`
+        : application.follow_up_date
+          ? `Follow up ${application.follow_up_date}`
         : application.status.charAt(0).toUpperCase() + application.status.slice(1),
       status: application.status,
       dot:
@@ -341,6 +343,7 @@ export default async function DashboardPage() {
               applications={(storedApplications ?? []).map(
                 (application): ManagedApplication => ({
                   id: application.id,
+                  applied_date: application.applied_date,
                   company: application.company,
                   created_at: application.created_at,
                   follow_up_date: application.follow_up_date,
@@ -348,6 +351,7 @@ export default async function DashboardPage() {
                   location: application.location,
                   notes: application.notes,
                   role: application.role,
+                  source: application.source,
                   status: application.status,
                   url: application.url,
                 }),

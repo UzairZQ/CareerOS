@@ -68,7 +68,9 @@ Installed dependencies added during auth work:
 - `@supabase/ssr`
 - `@supabase/supabase-js`
 
-No shadcn/ui setup has been completed yet. Some UI is custom Tailwind.
+No shadcn/ui setup has been completed yet. The current UI is intentionally
+custom Tailwind with native controls; shadcn remains a selective future option
+for complex accessible primitives rather than a second styling system.
 
 ## Environment And Secrets
 
@@ -144,6 +146,10 @@ user/application/skill and `learning_sprint_tasks` stores ordered tasks and
 proof. RLS scopes both tables to the owning user, and a database check prevents
 `completed = true` without a proof URL or note.
 
+The migration `supabase/migrations/20260712_add_application_metadata.sql` was
+applied to the connected live project and verified through the live integration
+suite. Applications now persist an optional source and applied date.
+
 Current `applications` fields:
 - `id`
 - `user_id`
@@ -152,6 +158,8 @@ Current `applications` fields:
 - `location`
 - `url`
 - `job_description`
+- `source`
+- `applied_date`
 - `status`
 - `follow_up_date`
 - `notes`
@@ -453,6 +461,7 @@ Current production-hardening notes:
   - add-job form submission and database verification
   - application status, follow-up, and notes update
   - complete application record editing and database verification
+  - source and applied-date persistence through add and edit flows
   - work-hour log submission and database verification
   - profile settings save
   - Evidence Map React proof save and database verification
@@ -467,7 +476,7 @@ Current production-hardening notes:
 - Current integration coverage includes:
   - temporary confirmed Supabase Auth user creation
   - sign-in with anon client
-  - RLS-protected application create/read/update, including complete record fields
+  - RLS-protected application create/read/update, including source and applied-date fields
   - cross-user isolation check
   - profile upsert
   - saved CV text round-trip through `user_profiles.cv_text`
@@ -518,7 +527,7 @@ Verified across 2026-07-09 through 2026-07-12:
 - `npm run lint` passed.
 - `npm test` passed: 19 tests passed, 3 intentionally skipped integration tests in the default run.
 - `npm run test:integration` passed: 3 real Supabase tests passed.
-- The full single-worker Chromium suite passed 2 authenticated dashboard tests and transparently skipped signup when Supabase email-send rate limiting was active.
+- The full single-worker Chromium suite passed 3 tests: public auth mode switching and 2 authenticated dashboard tests.
 - The public auth browser test now checks mode switching only and creates no Supabase users or confirmation emails.
 - `npm run build` passed with Next.js 16.2.10 using webpack.
 - `npm audit --audit-level=moderate` reported 0 vulnerabilities.
@@ -541,7 +550,7 @@ Verified across 2026-07-09 through 2026-07-12:
   overflow at 390x844.
 - The authenticated E2E assertion proves Evidence Map proof saves update the
   dashboard's live Evidence ready metric without a full-page reload.
-- Playwright runs with one worker to avoid creating concurrent confirmation-email requests against Supabase's provider quota.
+- Playwright runs with one worker for deterministic browser data cleanup; the public auth test does not create users or send confirmation emails.
 
 The dashboard is intentionally a long, scrollable work surface: the outer page stays fixed to the viewport while the main dashboard column scrolls through all modules. This is required so users can reach the complete application rather than clipping the lower modules.
 
@@ -594,6 +603,7 @@ components/jd-evidence-workspace.tsx
 components/profile-settings-panel.tsx
 components/sign-out-button.tsx
 components/work-hours-permit.tsx
+supabase/migrations/20260712_add_application_metadata.sql
 lib/application-validation.ts
 lib/dashboard-validation.ts
 tests/validation.test.ts

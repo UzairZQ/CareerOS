@@ -16,10 +16,12 @@ import {
 } from "@/components/application-record-editor";
 
 export type ManagedApplication = {
+  applied_date: string | null;
   id: string;
   company: string;
   job_description: string | null;
   role: string;
+  source: string | null;
   location: string | null;
   url: string | null;
   status: "saved" | "applied" | "interview" | "rejected" | "offer";
@@ -178,10 +180,12 @@ export function ApplicationManagementPanel({
     const { error } = await supabase
       .from("applications")
       .update({
+        applied_date: parsed.data.applied_date,
         company: parsed.data.company,
         job_description: parsed.data.job_description,
         location: parsed.data.location,
         role: parsed.data.role,
+        source: parsed.data.source,
         url: parsed.data.url,
       })
       .eq("id", application.id);

@@ -23,23 +23,27 @@ const applicationId = "22222222-2222-4222-8222-222222222222";
 describe("application validation", () => {
   it("trims and normalizes optional fields on create", () => {
     const parsed = createApplicationSchema.parse({
+      applied_date: " 2026-07-15 ",
       company: "  SAP  ",
       follow_up_date: "",
       job_description: "  React and TypeScript role  ",
       location: " Berlin ",
       notes: "",
       role: " Working Student ",
+      source: " LinkedIn ",
       status: "saved",
       url: "",
     });
 
     expect(parsed).toMatchObject({
       company: "SAP",
+      applied_date: "2026-07-15",
       follow_up_date: null,
       job_description: "React and TypeScript role",
       location: "Berlin",
       notes: null,
       role: "Working Student",
+      source: "LinkedIn",
       url: null,
     });
   });
@@ -75,26 +79,32 @@ describe("application validation", () => {
 
   it("validates the complete editable application record", () => {
     const parsed = updateApplicationRecordSchema.parse({
+      applied_date: " 2026-07-16 ",
       company: "  SAP  ",
       job_description: "  Build React dashboards.  ",
       location: " Berlin ",
       role: " Frontend Developer ",
+      source: " Company site ",
       url: " https://jobs.example.com/frontend ",
     });
 
     expect(parsed).toEqual({
+      applied_date: "2026-07-16",
       company: "SAP",
       job_description: "Build React dashboards.",
       location: "Berlin",
       role: "Frontend Developer",
+      source: "Company site",
       url: "https://jobs.example.com/frontend",
     });
     expect(
       updateApplicationRecordSchema.safeParse({
+        applied_date: "2026-07-16",
         company: "SAP",
         job_description: "",
         location: "Berlin",
         role: "Frontend Developer",
+        source: "Company site",
         url: "javascript:alert(1)",
       }).success,
     ).toBe(false);

@@ -73,6 +73,21 @@ export function ApplicationRecordEditor({
             type="url"
             value={draft.url ?? ""}
           />
+          <RecordField
+            label="Source"
+            name="source"
+            onChange={(value) => updateDraft("source", value)}
+            testId={`application-source-${application.id}`}
+            value={draft.source ?? ""}
+          />
+          <RecordField
+            label="Applied date"
+            name="applied_date"
+            onChange={(value) => updateDraft("applied_date", value)}
+            testId={`application-applied-date-${application.id}`}
+            type="date"
+            value={draft.applied_date ?? ""}
+          />
 
           <label className="block md:col-span-2">
             <span className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#AEB6C2]">
@@ -121,10 +136,12 @@ export function ApplicationRecordEditor({
 
 function getDraft(application: ManagedApplication): UpdateApplicationRecordInput {
   return {
+    applied_date: application.applied_date ?? "",
     company: application.company,
     job_description: application.job_description ?? "",
     location: application.location ?? "",
     role: application.role,
+    source: application.source ?? "",
     url: application.url ?? "",
   };
 }
@@ -141,7 +158,7 @@ function RecordField({
   name: string;
   onChange: (value: string) => void;
   testId: string;
-  type?: "text" | "url";
+  type?: "date" | "text" | "url";
   value: string;
 }) {
   return (

@@ -52,6 +52,7 @@ CareerOS/
     migrations/20260709_require_proof_for_cv_ready.sql
     migrations/20260710_add_cv_text_to_user_profiles.sql
     migrations/20260710_add_learning_sprints.sql
+    migrations/20260712_add_application_metadata.sql
   tests/
     analyzer.test.ts
     validation.test.ts
@@ -90,3 +91,4 @@ logic lives in `lib/`, and Supabase SQL/RLS lives in `supabase/`.
 - 2026-07-11: Added dashboard route-level loading and recoverable error boundaries for resilient server-rendered navigation.
 - 2026-07-11: Added a separate application record editor for complete job-field updates, with Zod validation, live Supabase verification, and authenticated browser coverage.
 - 2026-07-12: Hardened email/password auth with confirmation-aware errors, duplicate-submit protection, resend/reset cooldowns, and a non-email-generating public auth E2E test.
+- 2026-07-12: Added optional application source and applied-date fields with an additive live migration and end-to-end coverage.

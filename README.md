@@ -69,6 +69,7 @@ After the base schema, run the migrations in:
 - [supabase/migrations/20260709_require_proof_for_cv_ready.sql](/Users/uzair99/Development/CareerOS/supabase/migrations/20260709_require_proof_for_cv_ready.sql), which keeps `is_cv_ready` false until a CV-ready evidence row has both an evidence summary and a proof link.
 - [supabase/migrations/20260710_add_cv_text_to_user_profiles.sql](/Users/uzair99/Development/CareerOS/supabase/migrations/20260710_add_cv_text_to_user_profiles.sql), which adds the private saved CV text field.
 - [supabase/migrations/20260710_add_learning_sprints.sql](/Users/uzair99/Development/CareerOS/supabase/migrations/20260710_add_learning_sprints.sql), which adds user-scoped sprint and task tables with RLS and a database proof constraint.
+- [supabase/migrations/20260712_add_application_metadata.sql](/Users/uzair99/Development/CareerOS/supabase/migrations/20260712_add_application_metadata.sql), which adds optional application source and applied-date fields.
 
 Never commit `.env.local`, service-role credentials, database passwords, or provider API keys.
 
