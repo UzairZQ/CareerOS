@@ -97,6 +97,9 @@ export function ApplicationManagementPanel({
           application.role,
           application.location,
           application.job_description,
+          application.source,
+          application.url,
+          application.applied_date,
           draft.notes,
         ]
           .filter(Boolean)
@@ -222,6 +225,8 @@ export function ApplicationManagementPanel({
       return;
     }
 
+    setDeletingId(null);
+    setDeleteCandidateId(null);
     router.refresh();
   }
 

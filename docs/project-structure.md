@@ -28,6 +28,8 @@ CareerOS/
     application-record-editor.tsx
     work-hours-permit.tsx
     jd-evidence-workspace.tsx
+    jd-evidence-panels.tsx
+    jd-evidence-types.ts
     learning-sprint-panel.tsx
     evidence-map-table.tsx
     cv-check-panel.tsx
@@ -38,6 +40,12 @@ CareerOS/
     dashboard-navigation.tsx
   lib/
     careeros-analyzer.ts
+    analyzer-types.ts
+    analyzer-utils.ts
+    job-analyzer.ts
+    cv-analyzer.ts
+    learning-sprints.ts
+    application-assistant.ts
     dashboard-analytics.ts
     dashboard-validation.ts
     application-validation.ts
@@ -102,3 +110,4 @@ logic lives in `lib/`, and Supabase SQL/RLS lives in `supabase/`.
 - 2026-07-12: Added provider-aware Google OAuth callback errors and a durable setup guide for local and production redirects.
 - 2026-07-12: Reduced auth request traffic by validating proxy claims locally and added a 60-second email-specific signup cooldown.
 - 2026-07-12: Completed password recovery with a protected new-password route after the Supabase reset link.
+- 2026-07-12: Split analyzer domains behind a compatibility barrel and extracted JD/Evidence presentation panels; fixed duplicate dashboard keys and broadened application search fields.

@@ -1,6 +1,6 @@
 # CareerOS Context
 
-Last updated: 2026-07-11
+Last updated: 2026-07-12
 
 ## Project Summary
 
@@ -54,6 +54,13 @@ Dashboard data access is intentionally separated into the server-only
 application, work-hour, and AI-settings queries in parallel, then loads
 application-scoped evidence and calculates analytics before the page composes
 the React modules.
+
+The analyzer is intentionally split by responsibility: `lib/job-analyzer.ts`,
+`lib/cv-analyzer.ts`, `lib/learning-sprints.ts`, and
+`lib/application-assistant.ts` contain domain logic, while
+`lib/careeros-analyzer.ts` remains a compatibility barrel for existing imports.
+The JD/Evidence workspace keeps orchestration in the parent and renders through
+`components/jd-evidence-panels.tsx`.
 
 The JD/Evidence workspace keeps its server-backed mutation logic in the parent
 but renders the Learning Sprint through `components/learning-sprint-panel.tsx`.

@@ -19,6 +19,7 @@ import { createClient } from "@/lib/supabase/server";
 import { calculateProfileReadiness, type UserProfileData } from "@/lib/user-profile";
 
 type DashboardApplicationCard = {
+  id: string;
   company: string;
   role: string;
   location: string;
@@ -84,6 +85,7 @@ export default async function DashboardPage() {
     .toUpperCase();
   const dashboardApplications: DashboardApplicationCard[] = storedApplications.map(
     (application) => ({
+      id: application.id,
       company: application.company,
       role: application.role,
       location: application.location || "Location not set",
@@ -219,7 +221,7 @@ export default async function DashboardPage() {
                 dashboardApplications
                   .slice(0, 2)
                   .map((application) => (
-                    <ApplicationCard application={application} key={application.company} />
+                    <ApplicationCard application={application} key={application.id} />
                   ))
               ) : (
                 <EmptyApplicationsCard />

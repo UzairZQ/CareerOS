@@ -4,6 +4,7 @@ import {
   analyzeJobDescription,
   createLearningSprint,
   generateApplicationAssistantSuggestions,
+  hasSprintTaskProof,
 } from "@/lib/careeros-analyzer";
 
 describe("job description analyzer", () => {
@@ -33,6 +34,12 @@ describe("job description analyzer", () => {
 
     expect(sprint).toHaveLength(7);
     expect(sprint.join(" ")).toContain("PostgreSQL");
+  });
+
+  it("accepts either a proof link or a proof note for a sprint task", () => {
+    expect(hasSprintTaskProof({ proof_url: "", proof_note: "Explained the implementation." })).toBe(true);
+    expect(hasSprintTaskProof({ proof_url: "https://github.com/example/proof", proof_note: "" })).toBe(true);
+    expect(hasSprintTaskProof({ proof_url: "", proof_note: "" })).toBe(false);
   });
 
   it("does not confuse generic next text or SQL with specific skills", () => {

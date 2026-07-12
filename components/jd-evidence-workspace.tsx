@@ -1,19 +1,21 @@
 "use client";
 
-import {
-  ClipboardCheck,
-  FileSearch,
-} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { AiInsightButton, type AiProviderSettingSummary } from "@/components/ai-insight-button";
+import { type AiProviderSettingSummary } from "@/components/ai-insight-button";
 import {
-  EvidenceMapTable,
   type EvidenceRow,
   type EvidenceSaveState,
 } from "@/components/evidence-map-table";
 import {
-  LearningSprintPanel,
+  EvidenceMapPanel,
+  JdAnalyzerPanel,
+} from "@/components/jd-evidence-panels";
+import type {
+  ApplicationOption,
+  InitialEvidenceItem,
+} from "@/components/jd-evidence-types";
+import {
   type LearningSprint,
   type LearningSprintTask,
   type SprintStatus,
@@ -22,6 +24,7 @@ import {
   analyzeJobDescription,
   createLearningSprint,
   createProofTask,
+  hasSprintTaskProof,
   type SkillConfidence,
   type SkillMatch,
 } from "@/lib/careeros-analyzer";
@@ -32,22 +35,6 @@ import {
   learningSprintTaskProofSchema,
 } from "@/lib/dashboard-validation";
 import { createClient } from "@/lib/supabase/browser";
-
-type ApplicationOption = {
-  id: string;
-  company: string;
-  role: string;
-  job_description: string | null;
-};
-
-type InitialEvidenceItem = {
-  application_id: string | null;
-  skill: string;
-  evidence_summary: string | null;
-  confidence: SkillConfidence;
-  proof_url: string | null;
-};
-
 
 export function JdEvidenceWorkspace({
   applications,
@@ -415,7 +402,7 @@ export function JdEvidenceWorkspace({
     // before the Evidence Map confidence can move from learning to basic.
     if (!selectedApplication || !selectedSprintSkill || !sprint) return;
 
-    const allTasksHaveProof = sprint.tasks.length > 0 && sprint.tasks.every((task) => task.proof_url?.trim());
+    const allTasksHaveProof = sprint.tasks.length > 0 && sprint.tasks.every(hasSprintTaskProof);
     if (!allTasksHaveProof) {
       setSprintStatus("error");
       setSprintMessage("Add a proof link to every sprint task before improving this skill.");
@@ -490,202 +477,44 @@ export function JdEvidenceWorkspace({
 
   return (
     <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-      <article className="card-sheen rounded-[22px] border border-white/10 p-4 shadow-dashboard-card md:p-5">
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <div>
-            <p className="mb-1 flex items-center gap-2 text-sm font-medium uppercase tracking-[0.14em] text-[#AEB6C2]">
-              <FileSearch size={17} strokeWidth={1.8} />
-              JD Analyzer
-            </p>
-            <h2 className="font-serif text-[clamp(1.75rem,3vw,2.55rem)] font-normal leading-none tracking-[-0.01em]">
-              Extract the real ask
-            </h2>
-          </div>
-          <span className="stamp rounded-full px-3 py-2 text-[0.67rem] font-semibold uppercase">
-            Rule-based
-          </span>
-        </div>
-
-        <label className="mb-4 block">
-          <span className="mb-2 block text-sm font-medium text-white/74">Application source</span>
-          <select
-            className="dashboard-input w-full"
-            onChange={(event) => setSelectedApplicationId(event.target.value)}
-            value={selectedApplicationId}
-          >
-            <option value="manual">Manual paste</option>
-            {applications.map((application) => (
-              <option key={application.id} value={application.id}>
-                {application.company} - {application.role}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {!canPersistEvidence && (
-          <div className="mb-4 rounded-[18px] border border-[#C77D2E]/40 bg-[#C77D2E]/12 px-4 py-3 text-sm leading-6 text-[#FFD8B0]">
-            Analysis works in manual mode. To save evidence, add or select a saved application with a job description.
-          </div>
-        )}
-
-        {!evidenceTableReady && (
-          <div className="mb-4 rounded-[18px] border border-[#C77D2E]/40 bg-[#C77D2E]/12 px-4 py-3 text-sm leading-6 text-[#FFD8B0]">
-            Evidence saving is waiting for the latest Supabase schema. Run the updated{" "}
-            <code className="rounded bg-black/20 px-1.5 py-1">supabase/schema.sql</code>.
-          </div>
-        )}
-
-        <label className="block">
-          <span className="mb-2 block text-sm font-medium text-white/74">Job description text</span>
-          <textarea
-            className="dashboard-input min-h-[220px] w-full resize-y leading-6"
-            onChange={(event) => {
-              setSelectedApplicationId("manual");
-              setManualJobDescription(event.target.value);
-            }}
-            value={jobDescription}
-          />
-        </label>
-
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <InsightTile label="Role type" value={analysis.roleType} />
-          <InsightTile label="Work mode" value={analysis.workMode} />
-          <InsightTile
-            label="Language"
-            value={analysis.languageRequirements.join(", ") || "Not detected"}
-          />
-          <InsightTile
-            label="Location"
-            value={analysis.locationSignals.join(", ") || "Not detected"}
-          />
-        </div>
-
-        <div className="mt-4 rounded-[20px] border border-white/10 bg-[#171A1F]/54 p-4">
-          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.13em] text-[#AEB6C2]">
-            Fit summary
-          </p>
-          <p className="text-sm leading-6 text-white/78">{analysis.fitSummary}</p>
-        </div>
-
-        <div className="mt-4">
-          <AiInsightButton
-            input={{
-              evidenceMap,
-              fitSummary: analysis.fitSummary,
-              languageRequirements: analysis.languageRequirements,
-              missingOrWeakSkills: sprintSkills.map((skill) => skill.skill),
-              requiredSkills: analysis.requiredSkills.map((skill) => skill.skill),
-            }}
-            kind="skill-gap"
-            settings={aiSettings}
-          />
-        </div>
-      </article>
-
-      <article className="card-sheen rounded-[22px] border border-white/10 p-4 shadow-dashboard-card md:p-5">
-        <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="mb-1 flex items-center gap-2 text-sm font-medium uppercase tracking-[0.14em] text-[#AEB6C2]">
-              <ClipboardCheck size={17} strokeWidth={1.8} />
-              Evidence Map
-            </p>
-            <h2 className="font-serif text-[clamp(1.75rem,3vw,2.55rem)] font-normal leading-none tracking-[-0.01em]">
-              Proof before claims
-            </h2>
-          </div>
-          <div className="rounded-[18px] border border-white/10 bg-[#171A1F]/58 px-4 py-3 text-right">
-            <p className="text-xs uppercase tracking-[0.13em] text-[#AEB6C2]">CV-ready</p>
-            <p className="font-serif text-3xl leading-none">
-              {cvReadyCount}/{evidenceSkills.length || 0}
-            </p>
-          </div>
-        </div>
-
-        <SkillSummary title="Required skills" skills={analysis.requiredSkills} tone="required" />
-        <SkillSummary title="Nice-to-have skills" skills={analysis.niceToHaveSkills} tone="nice" />
-
-        <EvidenceMapTable
-          canPersistEvidence={canPersistEvidence}
-          errorBySkill={errorBySkill}
-          evidenceMap={evidenceMap}
-          onSaveEvidence={saveEvidence}
-          onUpdateEvidence={updateEvidence}
-          saveStateBySkill={saveStateBySkill}
-          skills={evidenceSkills}
-        />
-
-        <div className="mt-4 rounded-[20px] border border-white/10 bg-[#171A1F]/54 p-4">
-          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.13em] text-[#AEB6C2]">
-            Responsibilities detected
-          </p>
-          <ul className="space-y-2 text-sm leading-6 text-white/76">
-            {(analysis.responsibilities.length ? analysis.responsibilities : ["No responsibility bullets detected yet."]).map(
-              (responsibility) => (
-                <li key={responsibility}>• {responsibility}</li>
-              ),
-            )}
-          </ul>
-        </div>
-
-        <LearningSprintPanel
-          onCreateSprint={createSprint}
-          onImproveSkill={improveSkillFromSprint}
-          onSaveSprintTask={saveSprintTask}
-          onSprintDaysChange={setSprintDays}
-          onUpdateSprintTask={updateSprintTask}
-          selectedConfidence={evidenceMap[selectedSprintSkill?.skill ?? ""]?.confidence ?? "missing"}
-          selectedSprintSkill={selectedSprintSkill}
-          sprint={sprint}
-          sprintDays={sprintDays}
-          sprintMessage={sprintMessage}
-          sprintStatus={sprintStatus}
-        />
-      </article>
+      <JdAnalyzerPanel
+        aiSettings={aiSettings}
+        analysis={analysis}
+        applications={applications}
+        canPersistEvidence={canPersistEvidence}
+        evidenceMap={evidenceMap}
+        evidenceTableReady={evidenceTableReady}
+        jobDescription={jobDescription}
+        onJobDescriptionChange={(value) => {
+          setSelectedApplicationId("manual");
+          setManualJobDescription(value);
+        }}
+        onSelectApplication={setSelectedApplicationId}
+        selectedApplicationId={selectedApplicationId}
+        sprintSkills={sprintSkills}
+      />
+      <EvidenceMapPanel
+        analysis={analysis}
+        canPersistEvidence={canPersistEvidence}
+        cvReadyCount={cvReadyCount}
+        errorBySkill={errorBySkill}
+        evidenceMap={evidenceMap}
+        evidenceSkills={evidenceSkills}
+        onCreateSprint={createSprint}
+        onImproveSkill={improveSkillFromSprint}
+        onSaveEvidence={saveEvidence}
+        onSaveSprintTask={saveSprintTask}
+        onSprintDaysChange={setSprintDays}
+        onUpdateEvidence={updateEvidence}
+        onUpdateSprintTask={updateSprintTask}
+        saveStateBySkill={saveStateBySkill}
+        selectedConfidence={evidenceMap[selectedSprintSkill?.skill ?? ""]?.confidence ?? "missing"}
+        selectedSprintSkill={selectedSprintSkill}
+        sprint={sprint}
+        sprintDays={sprintDays}
+        sprintMessage={sprintMessage}
+        sprintStatus={sprintStatus}
+      />
     </section>
-  );
-}
-
-function InsightTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[18px] border border-white/10 bg-[#303849] p-4">
-      <p className="mb-2 text-xs uppercase tracking-[0.13em] text-[#AEB6C2]">{label}</p>
-      <p className="text-base font-semibold text-white">{value}</p>
-    </div>
-  );
-}
-
-function SkillSummary({
-  skills,
-  title,
-  tone,
-}: {
-  skills: SkillMatch[];
-  title: string;
-  tone: "required" | "nice";
-}) {
-  return (
-    <div className="mb-3">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.13em] text-[#AEB6C2]">
-        {title}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {skills.length ? (
-          skills.map((skill) => (
-            <span
-              className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${
-                tone === "required"
-                  ? "border-[#C77D2E]/40 bg-[#C77D2E]/12 text-[#FFD8B0]"
-                  : "border-[#2C7BE5]/38 bg-[#2C7BE5]/12 text-[#D8E8FF]"
-              }`}
-              key={skill.skill}
-            >
-              {skill.skill}
-            </span>
-          ))
-        ) : (
-          <span className="text-sm text-[#AEB6C2]">None detected</span>
-        )}
-      </div>
-    </div>
   );
 }
