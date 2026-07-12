@@ -67,6 +67,100 @@ input {
   animation: fade-rise 0.8s ease-out 0.4s both;
 }
 
+.careeros-wordmark {
+  display: block;
+  height: auto;
+  width: min(100%, 188px);
+  overflow: visible;
+}
+
+.careeros-wordmark__text {
+  transform-origin: 94px 21px;
+  animation: careeros-wordmark-breathe 6s ease-in-out infinite;
+}
+
+.careeros-wordmark__accent {
+  stroke-dasharray: 53;
+  stroke-dashoffset: 53;
+  animation: careeros-wordmark-accent 6s cubic-bezier(0.32, 0.72, 0, 1) infinite;
+}
+
+.careeros-wordmark__sweep {
+  animation: careeros-wordmark-sweep 6s cubic-bezier(0.32, 0.72, 0, 1) infinite;
+}
+
+.careeros-wordmark__dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: careeros-wordmark-dot 6s ease-in-out infinite;
+}
+
+@keyframes careeros-wordmark-breathe {
+  0%,
+  100% {
+    opacity: 0.88;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes careeros-wordmark-accent {
+  0%,
+  12% {
+    stroke-dashoffset: 53;
+  }
+  32%,
+  72% {
+    stroke-dashoffset: 0;
+  }
+  92%,
+  100% {
+    stroke-dashoffset: -53;
+  }
+}
+
+@keyframes careeros-wordmark-sweep {
+  0%,
+  12% {
+    transform: translateX(-8px);
+    opacity: 0;
+  }
+  28% {
+    opacity: 0.75;
+  }
+  52%,
+  100% {
+    transform: translateX(180px);
+    opacity: 0;
+  }
+}
+
+@keyframes careeros-wordmark-dot {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .careeros-wordmark__text,
+  .careeros-wordmark__accent,
+  .careeros-wordmark__sweep,
+  .careeros-wordmark__dot {
+    animation: none;
+  }
+
+  .careeros-wordmark__accent {
+    stroke-dashoffset: 0;
+  }
+}
+
 .auth-input {
   min-height: 39px;
   border-radius: 18px;

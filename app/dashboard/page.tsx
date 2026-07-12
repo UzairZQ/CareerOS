@@ -7,6 +7,7 @@ import {
   type ManagedApplication,
 } from "@/components/application-management-panel";
 import { ApplicationAssistantPanel } from "@/components/application-assistant-panel";
+import { CareerOSWordmark } from "@/components/careeros-wordmark";
 import { CvCheckPanel } from "@/components/cv-check-panel";
 import { DashboardAnalyticsPanel } from "@/components/dashboard-analytics-panel";
 import { DashboardNavigation } from "@/components/dashboard-navigation";
@@ -112,9 +113,8 @@ export default async function DashboardPage() {
     <main className="h-[100dvh] overflow-hidden bg-[#171A1F] text-[#F7F8F6]">
       <section className="dashboard-frame grid h-full overflow-hidden lg:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="hidden min-h-0 flex-col bg-[#262B34] px-5 py-8 lg:flex">
-          <div className="mb-8 px-3 font-serif text-xl font-medium tracking-[-0.01em]">
-            <span className="text-[#2C7BE5]">C</span>
-            <span className="text-white">.os</span>
+          <div className="mb-8 px-3 text-white">
+            <CareerOSWordmark />
           </div>
 
           <div className="mb-7 rounded-[22px] border border-white/10 bg-white/[0.04] p-4">
