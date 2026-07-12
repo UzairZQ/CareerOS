@@ -118,7 +118,7 @@ input {
 
 @media (max-width: 639px) {
   .auth-reference-input {
-    min-height: 50px;
+    min-height: 48px;
     border-radius: 16px;
     font-size: 1rem;
   }

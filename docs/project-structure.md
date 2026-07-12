@@ -13,6 +13,7 @@ CareerOS/
       ai-insight/route.ts
       ai-settings/route.ts
     auth/callback/route.ts
+    reset-password/page.tsx
     dashboard/page.tsx
     dashboard/loading.tsx
     dashboard/error.tsx
@@ -21,6 +22,7 @@ CareerOS/
     page.tsx
   components/
     auth-panel.tsx
+    reset-password-form.tsx
     add-application-form.tsx
     application-management-panel.tsx
     application-record-editor.tsx
@@ -99,3 +101,4 @@ logic lives in `lib/`, and Supabase SQL/RLS lives in `supabase/`.
 - 2026-07-12: Extracted accessible active-section navigation using `IntersectionObserver` for the long dashboard work surface.
 - 2026-07-12: Added provider-aware Google OAuth callback errors and a durable setup guide for local and production redirects.
 - 2026-07-12: Reduced auth request traffic by validating proxy claims locally and added a 60-second email-specific signup cooldown.
+- 2026-07-12: Completed password recovery with a protected new-password route after the Supabase reset link.

@@ -118,6 +118,7 @@ describe("application validation", () => {
 describe("auth navigation", () => {
   it("allows only same-origin relative callback destinations", () => {
     expect(getSafeNext("/dashboard?from=google")).toBe("/dashboard?from=google");
+    expect(getSafeNext("/reset-password")).toBe("/reset-password");
     expect(getSafeNext("https://example.com")).toBe("/dashboard");
     expect(getSafeNext("//example.com")).toBe("/dashboard");
     expect(getSafeNext("/\\\\example.com")).toBe("/dashboard");

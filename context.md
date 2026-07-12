@@ -209,6 +209,7 @@ Auth behavior:
 - Signup switches to the login view after the first successful request, preventing users from accidentally submitting signup repeatedly.
 - Password reset requests also have a 60-second client cooldown.
 - Successful signup requests also have a 60-second email-specific browser cooldown, persisted locally to prevent accidental repeated confirmation-email traffic after a refresh.
+- Password recovery now redirects through `/auth/callback` to the protected `/reset-password` screen, where the user can set and confirm a new password.
 
 Google sign-in:
 - UI button exists.

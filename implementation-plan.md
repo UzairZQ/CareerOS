@@ -6,6 +6,7 @@ The first production-oriented vertical slice is implemented in the repository:
 
 - Next.js App Router with React and TypeScript is the confirmed framework choice.
 - Supabase Auth, PostgreSQL tables, and RLS are connected.
+- Password recovery now has a complete flow: rate-limited reset request, callback session exchange, and protected new-password screen.
 - The protected dashboard contains applications, work hours, JD analysis, Evidence Map, learning sprints, CV check, Application Assistant, profile settings, and optional BYOK AI Insights.
 - The Job Tracker supports adding records, searching/filtering them, editing workflow state, and reopening the complete source record to update company, role, location, URL, or job description.
 - Applications also persist an optional source and applied date for useful search history and follow-up analysis.
@@ -88,6 +89,7 @@ The default project AI provider, when AI is enabled, is Gemini. Users can bring 
 ### 1. App Shell and Auth
 
 - Sign up and log in.
+- Request a password reset and set a new password from the protected recovery screen.
 - User profile with name, university, semester, visa/work status, target roles, and languages.
 - Protected dashboard after login.
 - Navigation between modules.

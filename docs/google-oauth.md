@@ -31,6 +31,13 @@ Use the exact callback URL displayed on the Supabase Google provider page.
 http://localhost:3000/auth/callback
 ```
 
+Also add this password-recovery destination so Supabase can return users to the
+new-password screen:
+
+```text
+http://localhost:3000/reset-password
+```
+
 ## Production Setup
 
 Add the production origin to Google and the production callback to Supabase:

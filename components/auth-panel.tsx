@@ -195,7 +195,7 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
     const supabase = createClient();
     setResetCooldown(60);
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
     });
 
     if (resetError) {
@@ -248,8 +248,9 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
   }
 
   return (
-    <section className="auth-card-flow flex w-full max-w-[430px] flex-col rounded-[32px] border border-white/10 bg-[#170B22]/72 p-5 text-[#F7F8F6] shadow-[0_30px_90px_rgba(0,0,0,0.38)] backdrop-blur-md sm:p-6 lg:h-[min(720px,calc(100dvh-40px))]">
-      <div className="relative z-10 text-center">
+    <section className="auth-card-flow flex w-full max-w-[430px] flex-col rounded-[32px] border border-white/10 bg-[#170B22]/72 p-4 text-[#F7F8F6] shadow-[0_30px_90px_rgba(0,0,0,0.38)] backdrop-blur-md sm:p-6 lg:h-[min(720px,calc(100dvh-40px))]">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col justify-center">
+      <div className="text-center">
         <div className="auth-mode-content" key={`heading-${mode}`}>
           <h2 className="text-3xl font-bold tracking-[-0.02em] text-white">
             {isLogin ? "Welcome Back" : "Create Account"}
@@ -260,8 +261,8 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
         </div>
       </div>
 
-      <form className="relative z-10 mt-5 flex min-h-0 flex-1 flex-col sm:mt-6" onSubmit={handleSubmit}>
-        <div className="auth-mode-content space-y-3" key={`fields-${mode}`}>
+      <form className="mt-4 flex flex-col sm:mt-6" onSubmit={handleSubmit}>
+        <div className="auth-mode-content space-y-2.5 sm:space-y-3" key={`fields-${mode}`}>
           {!isLogin && (
             <AuthInput
               icon={<User size={22} strokeWidth={1.9} />}
@@ -413,6 +414,7 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
           </button>
         </p>
       </form>
+      </div>
     </section>
   );
 }
