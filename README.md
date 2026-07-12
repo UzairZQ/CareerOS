@@ -96,6 +96,12 @@ CAREEROS_GROQ_MODEL=
 CAREEROS_OPENROUTER_MODEL=
 ```
 
+## Google OAuth
+
+Follow [docs/google-oauth.md](/Users/uzair99/Development/CareerOS/docs/google-oauth.md)
+to configure the optional Google sign-in provider without committing OAuth
+secrets.
+
 ## Product Principle
 
 CareerOS is not a generic AI CV generator. A skill is only useful in an application when the user can explain and prove it.

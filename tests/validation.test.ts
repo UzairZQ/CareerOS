@@ -15,7 +15,11 @@ import {
   workHourLogSchema,
 } from "@/lib/dashboard-validation";
 import { getSafeNext } from "@/lib/auth-navigation";
-import { formatAuthError, isEmailNotConfirmedError } from "@/lib/auth-errors";
+import {
+  formatAuthCallbackError,
+  formatAuthError,
+  isEmailNotConfirmedError,
+} from "@/lib/auth-errors";
 
 const userId = "11111111-1111-4111-8111-111111111111";
 const applicationId = "22222222-2222-4222-8222-222222222222";
@@ -126,8 +130,11 @@ describe("auth navigation", () => {
     expect(formatAuthError("Invalid login credentials")).toBe("Email or password is incorrect.");
     expect(formatAuthError("Unexpected provider error")).toBe("Unexpected provider error");
     expect(formatAuthError("Email not confirmed")).toContain("Confirm your email");
+    expect(formatAuthError("Unsupported provider")).toContain("Google sign-in is not enabled");
     expect(isEmailNotConfirmedError("email_not_confirmed")).toBe(true);
     expect(isEmailNotConfirmedError("Invalid login credentials")).toBe(false);
+    expect(formatAuthCallbackError("access_denied")).toBe("Google sign-in was cancelled.");
+    expect(formatAuthCallbackError("server_error")).toContain("provider settings");
   });
 });
 

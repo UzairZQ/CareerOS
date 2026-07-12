@@ -27,6 +27,7 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
   const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resetCooldown, setResetCooldown] = useState(0);
+  const [signupCooldown, setSignupCooldown] = useState(0);
   const submittingRef = useRef(false);
   const router = useRouter();
   const isLogin = mode === "login";
@@ -51,15 +52,16 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
   }, []);
 
   useEffect(() => {
-    if (resendCooldown === 0 && resetCooldown === 0) return;
+    if (resendCooldown === 0 && resetCooldown === 0 && signupCooldown === 0) return;
 
     const timer = window.setInterval(() => {
       setResendCooldown((current) => Math.max(0, current - 1));
       setResetCooldown((current) => Math.max(0, current - 1));
+      setSignupCooldown((current) => Math.max(0, current - 1));
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [resendCooldown, resetCooldown]);
+  }, [resendCooldown, resetCooldown, signupCooldown]);
 
   function switchMode(nextMode: AuthMode) {
     setMode(nextMode);
@@ -120,6 +122,24 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
         return;
       }
 
+      const signupCooldownKey = `careeros.signup_requested:${normalizedEmail.toLowerCase()}`;
+      let previousSignupAt = 0;
+      try {
+        previousSignupAt = Number(window.localStorage.getItem(signupCooldownKey) ?? 0);
+      } catch {
+        // Local storage is optional; Supabase remains the source of truth.
+      }
+
+      const secondsSincePreviousSignup = Math.floor((Date.now() - previousSignupAt) / 1000);
+      if (secondsSincePreviousSignup < 60) {
+        const secondsRemaining = 60 - secondsSincePreviousSignup;
+        setSignupCooldown(secondsRemaining);
+        setError(
+          `A confirmation email was recently requested for this address. Try again in ${secondsRemaining}s.`,
+        );
+        return;
+      }
+
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
@@ -147,6 +167,13 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
       setPassword("");
       setConfirmationEmail(normalizedEmail);
       setMode("login");
+      setSignupCooldown(60);
+      setResendCooldown(60);
+      try {
+        window.localStorage.setItem(signupCooldownKey, String(Date.now()));
+      } catch {
+        // Local storage is optional; the in-memory cooldown still applies.
+      }
       setMessage("Account created. Check your email, then sign in. Only request one resend if needed.");
     } finally {
       submittingRef.current = false;
@@ -347,10 +374,16 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
 
         <button
           className="auth-reference-primary mt-5 flex min-h-[50px] w-full items-center justify-center gap-2 rounded-[16px] bg-white px-6 text-base font-semibold text-black transition hover:-translate-y-0.5 hover:bg-white/92 disabled:cursor-not-allowed disabled:opacity-70 sm:mt-6 sm:min-h-[52px] sm:text-lg"
-          disabled={!isHydrated || status === "loading"}
+          disabled={!isHydrated || status === "loading" || (!isLogin && signupCooldown > 0)}
           type="submit"
         >
-          {status === "loading" ? "Working..." : isLogin ? "Sign In" : "Create Account"}
+          {status === "loading"
+            ? "Working..."
+            : !isLogin && signupCooldown > 0
+              ? `Try again in ${signupCooldown}s`
+              : isLogin
+                ? "Sign In"
+                : "Create Account"}
           <ArrowRight size={20} strokeWidth={2} />
         </button>
 

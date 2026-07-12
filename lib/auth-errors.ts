@@ -25,7 +25,23 @@ export function formatAuthError(message: string) {
     return "An account with this email already exists. Sign in instead.";
   }
 
+  if (
+    normalized.includes("provider is not enabled") ||
+    normalized.includes("unsupported provider") ||
+    normalized.includes("provider not found")
+  ) {
+    return "Google sign-in is not enabled yet. Configure the provider in Supabase Authentication.";
+  }
+
   return message;
+}
+
+export function formatAuthCallbackError(error: string | null) {
+  if (error === "access_denied") {
+    return "Google sign-in was cancelled.";
+  }
+
+  return "Google sign-in could not be completed. Check the provider settings and try again.";
 }
 
 export function isEmailNotConfirmedError(message: string) {

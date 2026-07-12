@@ -208,6 +208,7 @@ Auth behavior:
 - When Supabase requires email confirmation, login explains that state and offers a resend action with a 60-second client cooldown.
 - Signup switches to the login view after the first successful request, preventing users from accidentally submitting signup repeatedly.
 - Password reset requests also have a 60-second client cooldown.
+- Successful signup requests also have a 60-second email-specific browser cooldown, persisted locally to prevent accidental repeated confirmation-email traffic after a refresh.
 
 Google sign-in:
 - UI button exists.

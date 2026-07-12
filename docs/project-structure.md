@@ -45,6 +45,8 @@ CareerOS/
     auth-errors.ts
     auth-navigation.ts
     supabase/
+      browser.ts
+      server.ts
     server/
       dashboard-data.ts
       secret-crypto.ts
@@ -68,6 +70,7 @@ CareerOS/
   context.md
   implementation-plan.md
   README.md
+  docs/google-oauth.md
 ```
 
 ## Architecture Decision
@@ -94,3 +97,5 @@ logic lives in `lib/`, and Supabase SQL/RLS lives in `supabase/`.
 - 2026-07-12: Hardened email/password auth with confirmation-aware errors, duplicate-submit protection, resend/reset cooldowns, and a non-email-generating public auth E2E test.
 - 2026-07-12: Added optional application source and applied-date fields with an additive live migration and end-to-end coverage.
 - 2026-07-12: Extracted accessible active-section navigation using `IntersectionObserver` for the long dashboard work surface.
+- 2026-07-12: Added provider-aware Google OAuth callback errors and a durable setup guide for local and production redirects.
+- 2026-07-12: Reduced auth request traffic by validating proxy claims locally and added a 60-second email-specific signup cooldown.
