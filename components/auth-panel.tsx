@@ -3,9 +3,9 @@
 import { ArrowRight, BriefcaseBusiness, Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type React from "react";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createClient } from "@/lib/supabase/browser";
-import { formatAuthError } from "@/lib/auth-errors";
+import { formatAuthError, isEmailNotConfirmedError } from "@/lib/auth-errors";
 
 type AuthMode = "login" | "signup";
 
@@ -24,6 +24,10 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
   const [status, setStatus] = useState<"idle" | "loading">("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(initialError);
+  const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resetCooldown, setResetCooldown] = useState(0);
+  const submittingRef = useRef(false);
   const router = useRouter();
   const isLogin = mode === "login";
   const isHydrated = useSyncExternalStore(
@@ -46,76 +50,113 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
     }
   }, []);
 
+  useEffect(() => {
+    if (resendCooldown === 0 && resetCooldown === 0) return;
+
+    const timer = window.setInterval(() => {
+      setResendCooldown((current) => Math.max(0, current - 1));
+      setResetCooldown((current) => Math.max(0, current - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [resendCooldown, resetCooldown]);
+
   function switchMode(nextMode: AuthMode) {
     setMode(nextMode);
     setError(null);
     setMessage(null);
+    if (nextMode === "signup") {
+      setConfirmationEmail(null);
+    }
+  }
+
+  function handleEmailChange(value: string) {
+    setEmail(value);
+    if (confirmationEmail && value.trim().toLowerCase() !== confirmationEmail.toLowerCase()) {
+      setConfirmationEmail(null);
+    }
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submittingRef.current) return;
+
+    submittingRef.current = true;
     setStatus("loading");
     setError(null);
     setMessage(null);
 
-    const supabase = createClient();
+    try {
+      const supabase = createClient();
+      const normalizedEmail = email.trim();
 
-    if (isLogin) {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      if (isLogin) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password,
+        });
 
-      if (signInError) {
-        setError(formatAuthError(signInError.message));
-        setStatus("idle");
+        if (signInError) {
+          if (isEmailNotConfirmedError(signInError.message)) {
+            setConfirmationEmail(normalizedEmail);
+          }
+          setError(formatAuthError(signInError.message));
+          return;
+        }
+
+        try {
+          if (rememberEmail) {
+            window.localStorage.setItem("careeros.remembered_email", normalizedEmail);
+          } else {
+            window.localStorage.removeItem("careeros.remembered_email");
+          }
+        } catch {
+          // Remembering the email is optional and must never block sign-in.
+        }
+
+        setConfirmationEmail(null);
+        router.replace("/dashboard");
+        router.refresh();
         return;
       }
 
-      try {
-        if (rememberEmail) {
-          window.localStorage.setItem("careeros.remembered_email", email);
-        } else {
-          window.localStorage.removeItem("careeros.remembered_email");
-        }
-      } catch {
-        // Remembering the email is optional and must never block sign-in.
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: normalizedEmail,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            full_name: fullName.trim(),
+            target_role: targetRole.trim(),
+          },
+        },
+      });
+
+      if (signUpError) {
+        setError(formatAuthError(signUpError.message));
+        return;
       }
 
-      router.replace("/dashboard");
-      router.refresh();
-      return;
-    }
+      if (data.session) {
+        router.replace("/dashboard");
+        router.refresh();
+        return;
+      }
 
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-        data: {
-          full_name: fullName,
-          target_role: targetRole,
-        },
-      },
-    });
-
-    if (signUpError) {
-      setError(formatAuthError(signUpError.message));
+      setEmail(normalizedEmail);
+      setPassword("");
+      setConfirmationEmail(normalizedEmail);
+      setMode("login");
+      setMessage("Account created. Check your email, then sign in. Only request one resend if needed.");
+    } finally {
+      submittingRef.current = false;
       setStatus("idle");
-      return;
     }
-
-    if (data.session) {
-      router.replace("/dashboard");
-      router.refresh();
-      return;
-    }
-
-    setMessage("Check your email to confirm your account, then log in.");
-    setStatus("idle");
   }
 
   async function handlePasswordReset() {
+    if (resetCooldown > 0) return;
+
     setError(null);
     setMessage(null);
 
@@ -125,6 +166,7 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
     }
 
     const supabase = createClient();
+    setResetCooldown(60);
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
     });
@@ -134,7 +176,31 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
       return;
     }
 
-    setMessage("Password reset email sent.");
+    setMessage("Password reset email sent. Check your inbox or spam folder.");
+  }
+
+  async function handleResendConfirmation() {
+    if (!confirmationEmail || resendCooldown > 0) return;
+
+    setError(null);
+    setMessage(null);
+    setResendCooldown(60);
+
+    const supabase = createClient();
+    const { error: resendError } = await supabase.auth.resend({
+      email: confirmationEmail,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+      type: "signup",
+    });
+
+    if (resendError) {
+      setError(formatAuthError(resendError.message));
+      return;
+    }
+
+    setMessage(`Confirmation email sent to ${confirmationEmail}. You can request another after the cooldown.`);
   }
 
   async function handleGoogleAuth() {
@@ -181,7 +247,7 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
 
           <AuthInput
             icon={<Mail size={22} strokeWidth={1.9} />}
-            onChange={setEmail}
+            onChange={handleEmailChange}
             placeholder="Email address"
             required
             type="email"
@@ -243,11 +309,12 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
           )}
           {isLogin && (
             <button
-              className="text-white/72 transition hover:text-white"
+              className="text-white/72 transition hover:text-white disabled:cursor-not-allowed disabled:text-white/35"
+              disabled={resetCooldown > 0}
               onClick={handlePasswordReset}
               type="button"
             >
-              Forgot password?
+              {resetCooldown > 0 ? `Try again in ${resetCooldown}s` : "Forgot password?"}
             </button>
           )}
         </div>
@@ -261,6 +328,20 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
             }`}
           >
             {error ?? message}
+          </div>
+        )}
+
+        {isLogin && confirmationEmail && (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-[16px] border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white/62">
+            <span>Didn&apos;t receive the confirmation email?</span>
+            <button
+              className="font-semibold text-white/82 transition hover:text-white disabled:cursor-not-allowed disabled:text-white/35"
+              disabled={resendCooldown > 0 || status === "loading"}
+              onClick={handleResendConfirmation}
+              type="button"
+            >
+              {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend confirmation"}
+            </button>
           </div>
         )}
 

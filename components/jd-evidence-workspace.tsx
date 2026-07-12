@@ -122,8 +122,15 @@ export function JdEvidenceWorkspace({
 
       return isUnchanged ? current : next;
     });
-    setSaveStateBySkill((current) => (Object.keys(current).length === 0 ? current : {}));
   }, [evidenceSkills, initialEvidence, selectedApplicationId]);
+
+  useEffect(() => {
+    // A server refresh after saving should not erase the temporary success state.
+    // Reset it only when the user changes the selected job or its JD.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSaveStateBySkill({});
+    setErrorBySkill({});
+  }, [jobDescription, selectedApplicationId]);
 
   const cvReadyCount = evidenceSkills.filter((skill) => {
     const row = evidenceMap[skill.skill];

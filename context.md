@@ -197,6 +197,9 @@ Auth behavior:
 - If a user is not signed in and visits `/dashboard`, they are redirected to `/`.
 - `/auth/callback` exchanges the auth code for a session and redirects to `/dashboard` by default.
 - Sign out clears the Supabase session and redirects to `/`.
+- When Supabase requires email confirmation, login explains that state and offers a resend action with a 60-second client cooldown.
+- Signup switches to the login view after the first successful request, preventing users from accidentally submitting signup repeatedly.
+- Password reset requests also have a 60-second client cooldown.
 
 Google sign-in:
 - UI button exists.
@@ -445,7 +448,7 @@ Current production-hardening notes:
 - Current authenticated E2E coverage includes:
   - temporary Supabase user creation and cleanup
   - email/password login and redirect to `/dashboard`
-  - signup mode switching, signup submission, and metadata persistence
+  - signup/login mode switching without sending live confirmation emails
   - dashboard module navigation
   - add-job form submission and database verification
   - application status, follow-up, and notes update
@@ -490,6 +493,7 @@ Current production-hardening notes:
 - `/api/ai-settings` validates JSON/provider/key payloads server-side and rejects unauthenticated requests before writes.
 - `/api/ai-insight` rejects malformed/oversized payloads, uses authenticated per-user encrypted keys, and applies a 30-second provider timeout.
 - Auth provider errors are normalized into user-friendly messages, including a clear email-send rate-limit state.
+- Email-confirmation and password-reset actions are guarded by cooldowns so the UI does not encourage repeated provider requests.
 - AI defaults are current and configurable through `CAREEROS_GEMINI_MODEL`, `CAREEROS_GROQ_MODEL`, and `CAREEROS_OPENROUTER_MODEL`; current defaults are Gemini 2.5 Flash, Groq GPT-OSS 20B, and OpenRouter Google Gemini 2.5 Flash.
 - Async form handlers capture their form element before Supabase awaits, so successful add-job and work-hour submissions do not hit React's cleared `event.currentTarget`.
 - Optional dashboard validation fields accept `null` as well as empty strings, matching the database payloads for blank profile/evidence fields.
@@ -509,12 +513,13 @@ Current production-hardening notes:
 
 ## Verified Runtime State
 
-Verified across 2026-07-09 and 2026-07-10:
+Verified across 2026-07-09 through 2026-07-12:
 
 - `npm run lint` passed.
 - `npm test` passed: 19 tests passed, 3 intentionally skipped integration tests in the default run.
 - `npm run test:integration` passed: 3 real Supabase tests passed.
 - The full single-worker Chromium suite passed 2 authenticated dashboard tests and transparently skipped signup when Supabase email-send rate limiting was active.
+- The public auth browser test now checks mode switching only and creates no Supabase users or confirmation emails.
 - `npm run build` passed with Next.js 16.2.10 using webpack.
 - `npm audit --audit-level=moderate` reported 0 vulnerabilities.
 - Browser inspection at the default 1280x720 viewport showed the dashboard content in an internal scroll region.
@@ -625,24 +630,22 @@ context.md
 
 Recommended next implementation order:
 
-1. Rerun the signup E2E after the Supabase email-send quota window resets, if a non-skipped confirmation-email run is needed.
-2. Enable Google provider in Supabase if needed.
-3. Test Google OAuth end to end.
-4. Commit the current auth/dashboard work once stable.
-5. Retest application desk interactions in the browser:
+1. Enable Google provider in Supabase if needed.
+2. Test Google OAuth end to end.
+3. Retest application desk interactions in the browser:
    - status update
    - follow-up date
    - notes
    - two-click delete guard
    - search/filter
-6. Add stronger tests for dashboard mutations, ideally with Playwright once the UI stabilizes.
-7. Continue production hardening:
+4. Add stronger tests for dashboard mutations, ideally with Playwright once the UI stabilizes.
+5. Continue production hardening:
    - authenticated browser retest for profile, work-hour logs, evidence rows, AI key settings
    - better loading states
    - accessibility pass
    - responsive screenshots across desktop/tablet/mobile
-8. Improve module navigation with active-section highlighting if/when a client-side dashboard shell is introduced.
-9. Add export or portfolio-demo seed flow if useful for presenting the project.
+6. Improve module navigation with active-section highlighting if/when a client-side dashboard shell is introduced.
+7. Add export or portfolio-demo seed flow if useful for presenting the project.
 
 ## What Future Codex Should Remember
 

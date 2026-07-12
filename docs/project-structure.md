@@ -89,3 +89,4 @@ logic lives in `lib/`, and Supabase SQL/RLS lives in `supabase/`.
 - 2026-07-11: Added persisted Learning Sprint plans/tasks with per-task proof, database proof constraints, RLS isolation, proof-gated skill improvement, and mobile overflow regression coverage.
 - 2026-07-11: Added dashboard route-level loading and recoverable error boundaries for resilient server-rendered navigation.
 - 2026-07-11: Added a separate application record editor for complete job-field updates, with Zod validation, live Supabase verification, and authenticated browser coverage.
+- 2026-07-12: Hardened email/password auth with confirmation-aware errors, duplicate-submit protection, resend/reset cooldowns, and a non-email-generating public auth E2E test.
