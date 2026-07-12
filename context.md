@@ -519,6 +519,7 @@ Current production-hardening notes:
   - desktop sidebar links use anchors such as `#overview`, `#applications`, `#work-hours`, `#skill-gap`, `#cv-check`, `#assistant`, `#ai-insights`
   - mobile has a horizontal module nav
   - overview appears first; application creation/management lives under the Applications module
+- `components/dashboard-navigation.tsx` uses `IntersectionObserver` to highlight the visible section and exposes `aria-current="location"` for assistive technology.
 
 ## Verified Runtime State
 
@@ -550,6 +551,7 @@ Verified across 2026-07-09 through 2026-07-12:
   overflow at 390x844.
 - The authenticated E2E assertion proves Evidence Map proof saves update the
   dashboard's live Evidence ready metric without a full-page reload.
+- The authenticated E2E assertions prove desktop and mobile dashboard navigation expose the active section.
 - Playwright runs with one worker for deterministic browser data cleanup; the public auth test does not create users or send confirmation emails.
 
 The dashboard is intentionally a long, scrollable work surface: the outer page stays fixed to the viewport while the main dashboard column scrolls through all modules. This is required so users can reach the complete application rather than clipping the lower modules.
@@ -599,6 +601,7 @@ components/application-record-editor.tsx
 components/application-assistant-panel.tsx
 components/cv-check-panel.tsx
 components/dashboard-analytics-panel.tsx
+components/dashboard-navigation.tsx
 components/jd-evidence-workspace.tsx
 components/profile-settings-panel.tsx
 components/sign-out-button.tsx

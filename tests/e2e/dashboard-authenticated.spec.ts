@@ -134,6 +134,10 @@ test.describe("authenticated dashboard UI", () => {
 
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(page.getByRole("heading", { name: "CareerOS Control" })).toBeVisible();
+    await expect(page.getByTestId("dashboard-nav-desktop-overview")).toHaveAttribute(
+      "aria-current",
+      "location",
+    );
     await expect(page.getByRole("heading", { name: "CareerOS E2E GmbH" })).toBeVisible();
 
     const addJobButton = page.getByRole("button", { exact: true, name: "Add job" });
@@ -160,6 +164,10 @@ test.describe("authenticated dashboard UI", () => {
 
     await page.getByRole("link", { exact: true, name: "Applications" }).click();
     await expect(page.locator(`#applications`)).toBeInViewport();
+    await expect(page.getByTestId("dashboard-nav-desktop-applications")).toHaveAttribute(
+      "aria-current",
+      "location",
+    );
 
     await page.getByTestId(`application-details-toggle-${applicationId}`).click();
     await page.getByTestId(`application-company-${applicationId}`).fill("CareerOS E2E Updated GmbH");
@@ -372,6 +380,10 @@ test.describe("authenticated dashboard UI", () => {
 
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(page.getByRole("navigation", { name: "Dashboard modules" })).toBeVisible();
+    await expect(page.getByTestId("dashboard-nav-mobile-overview")).toHaveAttribute(
+      "aria-current",
+      "location",
+    );
 
     const documentOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth || document.body.scrollWidth > window.innerWidth,

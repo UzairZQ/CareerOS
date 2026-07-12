@@ -1,16 +1,4 @@
-import {
-  Bell,
-  BriefcaseBusiness,
-  ChartNoAxesCombined,
-  FileCheck2,
-  HelpCircle,
-  KeyRound,
-  Search,
-  ShieldCheck,
-  SlidersHorizontal,
-  Timer,
-  UserRound,
-} from "lucide-react";
+import { Bell, HelpCircle, Search, ShieldCheck, SlidersHorizontal } from "lucide-react";
 import { redirect } from "next/navigation";
 import { AddApplicationForm } from "@/components/add-application-form";
 import { AiSettingsPanel } from "@/components/ai-settings-panel";
@@ -21,6 +9,7 @@ import {
 import { ApplicationAssistantPanel } from "@/components/application-assistant-panel";
 import { CvCheckPanel } from "@/components/cv-check-panel";
 import { DashboardAnalyticsPanel } from "@/components/dashboard-analytics-panel";
+import { DashboardNavigation } from "@/components/dashboard-navigation";
 import { JdEvidenceWorkspace } from "@/components/jd-evidence-workspace";
 import { ProfileSettingsPanel } from "@/components/profile-settings-panel";
 import { SignOutButton } from "@/components/sign-out-button";
@@ -28,17 +17,6 @@ import { WorkHoursPermit } from "@/components/work-hours-permit";
 import { loadDashboardData } from "@/lib/server/dashboard-data";
 import { createClient } from "@/lib/supabase/server";
 import { calculateProfileReadiness, type UserProfileData } from "@/lib/user-profile";
-
-const navItems = [
-  { label: "Overview", icon: SlidersHorizontal, href: "#overview" },
-  { label: "Applications", icon: BriefcaseBusiness, href: "#applications" },
-  { label: "Work Hours", icon: Timer, href: "#work-hours" },
-  { label: "Skill Gap", icon: ChartNoAxesCombined, href: "#skill-gap" },
-  { label: "CV Check", icon: FileCheck2, href: "#cv-check" },
-  { label: "Assistant", icon: FileCheck2, href: "#assistant" },
-  { label: "Profile", icon: UserRound, href: "#profile" },
-  { label: "AI Insights", icon: KeyRound, href: "#ai-insights" },
-];
 
 type DashboardApplicationCard = {
   company: string;
@@ -159,22 +137,7 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <nav className="flex flex-1 flex-col gap-3">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <a
-                  aria-label={item.label}
-                  className="flex h-12 items-center gap-3 rounded-2xl px-3 text-sm font-medium text-white/64 transition hover:bg-white/5 hover:text-white focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-none"
-                  href={item.href}
-                  key={item.label}
-                >
-                  <Icon size={22} strokeWidth={1.8} />
-                  <span>{item.label}</span>
-                </a>
-              );
-            })}
-          </nav>
+          <DashboardNavigation variant="desktop" />
 
           <SignOutButton />
         </aside>
@@ -196,20 +159,7 @@ export default async function DashboardPage() {
             </div>
           </header>
 
-          <nav
-            aria-label="Dashboard modules"
-            className="dashboard-module-nav mb-4 flex gap-2 overflow-x-auto rounded-[18px] border border-white/10 bg-[#222833]/82 p-2 lg:hidden"
-          >
-            {navItems.map((item) => (
-              <a
-                className="shrink-0 rounded-xl px-3 py-2 text-xs font-semibold text-white/68 transition hover:bg-white/[0.06] hover:text-white focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-none"
-                href={item.href}
-                key={item.href}
-              >
-                {item.label}
-              </a>
-            ))}
-          </nav>
+          <DashboardNavigation variant="mobile" />
 
           <section
             className="mb-5 scroll-mt-5 rounded-[20px] bg-[#252B36] p-4 shadow-dashboard-card md:p-5"

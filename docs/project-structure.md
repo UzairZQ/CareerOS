@@ -33,6 +33,7 @@ CareerOS/
     profile-settings-panel.tsx
     ai-settings-panel.tsx
     dashboard-analytics-panel.tsx
+    dashboard-navigation.tsx
   lib/
     careeros-analyzer.ts
     dashboard-analytics.ts
@@ -92,3 +93,4 @@ logic lives in `lib/`, and Supabase SQL/RLS lives in `supabase/`.
 - 2026-07-11: Added a separate application record editor for complete job-field updates, with Zod validation, live Supabase verification, and authenticated browser coverage.
 - 2026-07-12: Hardened email/password auth with confirmation-aware errors, duplicate-submit protection, resend/reset cooldowns, and a non-email-generating public auth E2E test.
 - 2026-07-12: Added optional application source and applied-date fields with an additive live migration and end-to-end coverage.
+- 2026-07-12: Extracted accessible active-section navigation using `IntersectionObserver` for the long dashboard work surface.
