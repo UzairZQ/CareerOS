@@ -93,7 +93,7 @@ export const workHourLogSchema = z.object({
   employer: optionalTrimmedString(160),
   hours: z.coerce
     .number({ error: "Hours must be a number." })
-    .positive("Hours must be greater than zero.")
+    .min(0.25, "Hours must be at least 0.25.")
     .max(24, "Hours cannot exceed 24 in one entry.")
     .refine((value) => Number.isFinite(value), "Hours must be a valid number."),
   notes: optionalTrimmedString(500),

@@ -70,6 +70,7 @@ After the base schema, run the migrations in:
 - [supabase/migrations/20260710_add_cv_text_to_user_profiles.sql](/Users/uzair99/Development/CareerOS/supabase/migrations/20260710_add_cv_text_to_user_profiles.sql), which adds the private saved CV text field.
 - [supabase/migrations/20260710_add_learning_sprints.sql](/Users/uzair99/Development/CareerOS/supabase/migrations/20260710_add_learning_sprints.sql), which adds user-scoped sprint and task tables with RLS and a database proof constraint.
 - [supabase/migrations/20260712_add_application_metadata.sql](/Users/uzair99/Development/CareerOS/supabase/migrations/20260712_add_application_metadata.sql), which adds optional application source and applied-date fields.
+- [supabase/migrations/20260713_scope_related_rows_to_owned_applications.sql](/Users/uzair99/Development/CareerOS/supabase/migrations/20260713_scope_related_rows_to_owned_applications.sql), which prevents evidence and learning sprints from linking to another user's application.
 
 Never commit `.env.local`, service-role credentials, database passwords, or provider API keys.
 

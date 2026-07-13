@@ -39,7 +39,10 @@ export function WorkHoursPermit({ logs, tableReady = true, userId }: WorkHoursPe
   const week = getIsoWeekRange();
   const recentLogs = logs.slice(0, 4);
   const weeklyPercent = Math.min(100, (stats.weeklyHours / stats.weeklyLimit) * 100);
-  const yearlyPercent = Math.min(100, (stats.yearlyFullDays / stats.yearlyFullDayLimit) * 100);
+  const yearlyPercent = Math.min(
+    100,
+    (stats.yearlyEquivalentDays / stats.yearlyEquivalentDayLimit) * 100,
+  );
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -127,12 +130,14 @@ export function WorkHoursPermit({ logs, tableReady = true, userId }: WorkHoursPe
 
       <div className="mb-4 space-y-3">
         <PermitMeter label="Weekly hours" percent={weeklyPercent} value={`${stats.weeklyHours} / ${stats.weeklyLimit}`} />
-        <PermitMeter label="Full days this year" percent={yearlyPercent} value={`${stats.yearlyFullDays} / ${stats.yearlyFullDayLimit}`} />
         <PermitMeter
-          label="Half days this year"
-          percent={Math.min(100, (stats.yearlyHalfDays / stats.yearlyHalfDayLimit) * 100)}
-          value={`${stats.yearlyHalfDays} / ${stats.yearlyHalfDayLimit}`}
+          label="Equivalent allowance days"
+          percent={yearlyPercent}
+          value={`${stats.yearlyEquivalentDays} / ${stats.yearlyEquivalentDayLimit}`}
         />
+        <p className="text-xs text-white/68">
+          {stats.yearlyFullDays} full-day records + {stats.yearlyHalfDays} half-day records
+        </p>
       </div>
 
       <div className="mb-4 grid gap-3 md:grid-cols-3">

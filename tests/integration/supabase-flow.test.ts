@@ -36,6 +36,7 @@ describeIntegration("Supabase authenticated dashboard flow", () => {
   let userId: string;
   let otherUserId: string;
   let applicationId: string;
+  let otherApplicationId: string;
   const runId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const password = `CareerOS-${runId}!Aa1`;
   const email = `careeros-it-${runId}@example.com`;
@@ -86,6 +87,9 @@ describeIntegration("Supabase authenticated dashboard flow", () => {
   afterAll(async () => {
     if (applicationId) {
       await admin.from("applications").delete().eq("id", applicationId);
+    }
+    if (otherApplicationId) {
+      await admin.from("applications").delete().eq("id", otherApplicationId);
     }
     if (userId) {
       await admin.auth.admin.deleteUser(userId);
@@ -300,5 +304,43 @@ describeIntegration("Supabase authenticated dashboard flow", () => {
     });
 
     expect(error).not.toBeNull();
+  });
+
+  it("prevents cross-user evidence and sprint links", async () => {
+    const { data: otherApplication, error: otherApplicationError } = await admin
+      .from("applications")
+      .insert({
+        company: "Other User GmbH",
+        job_description: "Required: React.",
+        role: "Frontend Developer",
+        status: "saved",
+        user_id: otherUserId,
+      })
+      .select("id")
+      .single();
+
+    expect(otherApplicationError).toBeNull();
+    otherApplicationId = otherApplication!.id;
+
+    const { error: evidenceError } = await userClient.from("evidence_items").insert({
+      application_id: otherApplicationId,
+      confidence: "missing",
+      evidence_type: "learning_task",
+      proof_task: "Do not attach this row.",
+      requirement: "required",
+      skill: "React",
+      skill_category: "frontend",
+      user_id: userId,
+    });
+    expect(evidenceError).not.toBeNull();
+
+    const { error: sprintError } = await userClient.from("learning_sprints").insert({
+      application_id: otherApplicationId,
+      duration_days: 3,
+      skill: "React",
+      status: "active",
+      user_id: userId,
+    });
+    expect(sprintError).not.toBeNull();
   });
 });

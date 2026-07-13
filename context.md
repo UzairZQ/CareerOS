@@ -1,6 +1,6 @@
 # CareerOS Context
 
-Last updated: 2026-07-12
+Last updated: 2026-07-13
 
 ## Project Summary
 
@@ -156,6 +156,13 @@ proof. RLS scopes both tables to the owning user, and a database check prevents
 The migration `supabase/migrations/20260712_add_application_metadata.sql` was
 applied to the connected live project and verified through the live integration
 suite. Applications now persist an optional source and applied date.
+
+The migration `supabase/migrations/20260713_scope_related_rows_to_owned_applications.sql`
+is present in the repository but still needs to be run in the connected Supabase
+SQL editor. It tightens evidence and learning-sprint RLS so a user can only link
+those rows to applications they own. The repository integration test now proves
+that invariant and will remain red against a database that has not received the
+migration.
 
 Current `applications` fields:
 - `id`

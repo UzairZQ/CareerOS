@@ -184,6 +184,17 @@ describe("dashboard validation", () => {
         work_date: "2026-07-09",
       }).success,
     ).toBe(false);
+
+    expect(
+      workHourLogSchema.safeParse({
+        day_type: "half",
+        employer: "Mini job",
+        hours: "0.1",
+        notes: "",
+        user_id: userId,
+        work_date: "2026-07-09",
+      }).success,
+    ).toBe(false);
   });
 
   it("validates sprint setup and normalizes proof fields", () => {

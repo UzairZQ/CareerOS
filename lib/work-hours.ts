@@ -9,9 +9,11 @@ export type WorkHourLog = {
 
 export type WorkHourStats = {
   weeklyHours: number;
+  yearlyEquivalentDays: number;
   yearlyFullDays: number;
   yearlyHalfDays: number;
   weeklyLimit: number;
+  yearlyEquivalentDayLimit: number;
   yearlyFullDayLimit: number;
   yearlyHalfDayLimit: number;
   isWeeklyCompliant: boolean;
@@ -53,22 +55,24 @@ export function calculateWorkHourStats(logs: WorkHourLog[], date = new Date()): 
   const weeklyHours = sum(logsThisWeek.map((log) => Number(log.hours)));
   const yearlyFullDays = logsThisYear.filter((log) => log.day_type === "full").length;
   const yearlyHalfDays = logsThisYear.filter((log) => log.day_type === "half").length;
+  const yearlyEquivalentDays = Number((yearlyFullDays + yearlyHalfDays / 2).toFixed(1));
   const weeklyLimit = 20;
+  const yearlyEquivalentDayLimit = 140;
   const yearlyFullDayLimit = 140;
   const yearlyHalfDayLimit = 280;
   const isWeeklyCompliant = weeklyHours <= weeklyLimit;
-  const isYearlyCompliant =
-    yearlyFullDays <= yearlyFullDayLimit && yearlyHalfDays <= yearlyHalfDayLimit;
+  const isYearlyCompliant = yearlyEquivalentDays <= yearlyEquivalentDayLimit;
   const warningThresholdReached =
     weeklyHours >= weeklyLimit * 0.8 ||
-    yearlyFullDays >= yearlyFullDayLimit * 0.8 ||
-    yearlyHalfDays >= yearlyHalfDayLimit * 0.8;
+    yearlyEquivalentDays >= yearlyEquivalentDayLimit * 0.8;
 
   return {
     weeklyHours,
+    yearlyEquivalentDays,
     yearlyFullDays,
     yearlyHalfDays,
     weeklyLimit,
+    yearlyEquivalentDayLimit,
     yearlyFullDayLimit,
     yearlyHalfDayLimit,
     isWeeklyCompliant,
