@@ -4,6 +4,7 @@ import {
   analyzeJobDescription,
   createLearningSprint,
   generateApplicationAssistantSuggestions,
+  hasSprintTaskLink,
   hasSprintTaskProof,
 } from "@/lib/careeros-analyzer";
 
@@ -40,6 +41,8 @@ describe("job description analyzer", () => {
     expect(hasSprintTaskProof({ proof_url: "", proof_note: "Explained the implementation." })).toBe(true);
     expect(hasSprintTaskProof({ proof_url: "https://github.com/example/proof", proof_note: "" })).toBe(true);
     expect(hasSprintTaskProof({ proof_url: "", proof_note: "" })).toBe(false);
+    expect(hasSprintTaskLink({ proof_url: "" })).toBe(false);
+    expect(hasSprintTaskLink({ proof_url: "https://github.com/example/proof" })).toBe(true);
   });
 
   it("does not confuse generic next text or SQL with specific skills", () => {

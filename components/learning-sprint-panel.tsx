@@ -2,7 +2,7 @@
 
 import { BookOpenCheck } from "lucide-react";
 import type { SkillConfidence, SkillMatch } from "@/lib/careeros-analyzer";
-import { hasSprintTaskProof } from "@/lib/learning-sprints";
+import { hasSprintTaskLink, hasSprintTaskProof } from "@/lib/learning-sprints";
 
 export type LearningSprintTask = {
   id: string;
@@ -55,7 +55,8 @@ export function LearningSprintPanel({
     sprint &&
       sprint.status !== "completed" &&
       sprint.tasks.length > 0 &&
-      sprint.tasks.every(hasSprintTaskProof),
+      sprint.tasks.every(hasSprintTaskProof) &&
+      sprint.tasks.some(hasSprintTaskLink),
   );
 
   return (
@@ -186,7 +187,7 @@ export function LearningSprintPanel({
 
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-[16px] border border-[#C77D2E]/35 bg-[#C77D2E]/10 px-3 py-3">
                 <p className="text-xs leading-5 text-[#FFD8B0]">
-                  Skill improvement requires one proof item per task. Notes alone do not make a CV claim ready.
+                  Skill improvement requires proof for every task and at least one proof link for the CV-ready record.
                 </p>
                 <button
                   className="min-h-10 rounded-xl bg-[#2C7BE5] px-4 text-xs font-semibold text-white transition hover:bg-[#3B88F1] disabled:cursor-not-allowed disabled:opacity-50"

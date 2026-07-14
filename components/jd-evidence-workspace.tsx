@@ -24,6 +24,7 @@ import {
   analyzeJobDescription,
   createLearningSprint,
   createProofTask,
+  hasSprintTaskLink,
   hasSprintTaskProof,
   type SkillConfidence,
   type SkillMatch,
@@ -406,6 +407,12 @@ export function JdEvidenceWorkspace({
     if (!allTasksHaveProof) {
       setSprintStatus("error");
       setSprintMessage("Add a proof link to every sprint task before improving this skill.");
+      return;
+    }
+
+    if (!sprint.tasks.some(hasSprintTaskLink)) {
+      setSprintStatus("error");
+      setSprintMessage("Add at least one proof link before improving this skill.");
       return;
     }
 

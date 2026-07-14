@@ -15,6 +15,10 @@ export function hasSprintTaskProof(task: {
   return Boolean(task.proof_url?.trim() || task.proof_note?.trim());
 }
 
+export function hasSprintTaskLink(task: { proof_url?: string | null }) {
+  return Boolean(task.proof_url?.trim());
+}
+
 export function createLearningSprint(skill: string, days: 3 | 7 | 14) {
   if (days === 3) {
     return [
