@@ -22,6 +22,14 @@ test.describe("public auth flow", () => {
     await expect(page.getByRole("button", { exact: true, name: "Sign In" })).toBeVisible();
     await expect(page.getByRole("button", { exact: true, name: "Forgot password?" })).toBeVisible();
 
+    await page.getByRole("button", { exact: true, name: "Forgot password?" }).click();
+    await expect(page.getByRole("heading", { exact: true, name: "Reset Password" })).toBeVisible();
+    await expect(page.getByRole("button", { exact: true, name: "Send reset link" })).toBeVisible();
+    await expect(page.getByPlaceholder("Password")).toHaveCount(0);
+
+    await page.getByRole("button", { exact: true, name: "Sign in" }).click();
+    await expect(page.getByRole("heading", { exact: true, name: "Welcome Back" })).toBeVisible();
+
     await page.goto("/reset-password");
     await expect(page).toHaveURL(/\/$/);
 

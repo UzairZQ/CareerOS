@@ -10,45 +10,37 @@ import {
   UserRound,
   type LucideIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
 
-const navItems: Array<{ label: string; icon: LucideIcon; href: `#${string}` }> = [
-  { label: "Overview", icon: SlidersHorizontal, href: "#overview" },
-  { label: "Applications", icon: BriefcaseBusiness, href: "#applications" },
-  { label: "Work Hours", icon: Timer, href: "#work-hours" },
-  { label: "Skill Gap", icon: ChartNoAxesCombined, href: "#skill-gap" },
-  { label: "CV Check", icon: FileCheck2, href: "#cv-check" },
-  { label: "Assistant", icon: FileCheck2, href: "#assistant" },
-  { label: "Profile", icon: UserRound, href: "#profile" },
-  { label: "AI Insights", icon: KeyRound, href: "#ai-insights" },
+export type DashboardModule =
+  | "overview"
+  | "applications"
+  | "work-hours"
+  | "skill-gap"
+  | "cv-check"
+  | "assistant"
+  | "profile"
+  | "ai-insights";
+
+export const navItems: Array<{ label: string; icon: LucideIcon; module: DashboardModule }> = [
+  { label: "Overview", icon: SlidersHorizontal, module: "overview" },
+  { label: "Applications", icon: BriefcaseBusiness, module: "applications" },
+  { label: "Work Hours", icon: Timer, module: "work-hours" },
+  { label: "Skill Gap", icon: ChartNoAxesCombined, module: "skill-gap" },
+  { label: "CV Check", icon: FileCheck2, module: "cv-check" },
+  { label: "Assistant", icon: FileCheck2, module: "assistant" },
+  { label: "Profile", icon: UserRound, module: "profile" },
+  { label: "AI Insights", icon: KeyRound, module: "ai-insights" },
 ];
 
-export function DashboardNavigation({ variant }: { variant: "desktop" | "mobile" }) {
-  const [activeHref, setActiveHref] = useState("#overview");
-
-  useEffect(() => {
-    const sections = navItems
-      .map((item) => document.querySelector(item.href))
-      .filter((section): section is Element => Boolean(section));
-
-    if (sections.length === 0 || !("IntersectionObserver" in window)) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visibleSections = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        const visibleSection = visibleSections[0];
-        if (visibleSection) {
-          setActiveHref(`#${visibleSection.target.id}`);
-        }
-      },
-      { rootMargin: "-12% 0px -72% 0px", threshold: [0, 0.2, 0.6] },
-    );
-
-    sections.forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
-  }, []);
+export function DashboardNavigation({
+  activeModule,
+  onNavigate,
+  variant,
+}: {
+  activeModule: DashboardModule;
+  onNavigate: (module: DashboardModule) => void;
+  variant: "desktop" | "mobile";
+}) {
 
   const isMobile = variant === "mobile";
 
@@ -63,9 +55,9 @@ export function DashboardNavigation({ variant }: { variant: "desktop" | "mobile"
     >
       {navItems.map((item) => {
         const Icon = item.icon;
-        const isActive = activeHref === item.href;
+        const isActive = activeModule === item.module;
         return (
-          <a
+          <button
             aria-current={isActive ? "location" : undefined}
             aria-label={item.label}
             className={
@@ -80,13 +72,13 @@ export function DashboardNavigation({ variant }: { variant: "desktop" | "mobile"
                   }`
             }
             data-testid={`dashboard-nav-${variant}-${item.label.toLowerCase().replaceAll(" ", "-")}`}
-            href={item.href}
-            key={item.href}
-            onClick={() => setActiveHref(item.href)}
+            key={item.module}
+            onClick={() => onNavigate(item.module)}
+            type="button"
           >
             {!isMobile && <Icon size={22} strokeWidth={1.8} />}
             <span>{item.label}</span>
-          </a>
+          </button>
         );
       })}
     </nav>

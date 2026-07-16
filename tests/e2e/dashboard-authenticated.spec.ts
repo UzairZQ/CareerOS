@@ -138,8 +138,10 @@ test.describe("authenticated dashboard UI", () => {
       "aria-current",
       "location",
     );
-    await expect(page.getByRole("heading", { name: "CareerOS E2E GmbH" })).toBeVisible();
+    await expect(page.getByText("CareerOS E2E GmbH", { exact: true })).toBeVisible();
 
+    await page.getByTestId("dashboard-nav-desktop-applications").click();
+    await expect(page.getByRole("heading", { exact: true, name: "Applications" })).toBeVisible();
     const addJobButton = page.getByRole("button", { exact: true, name: "Add job" });
     expect(await addJobButton.count()).toBe(1);
     await addJobButton.click();
@@ -150,7 +152,7 @@ test.describe("authenticated dashboard UI", () => {
     await page.getByLabel("Applied date", { exact: true }).fill("2026-07-11");
     await page.getByLabel("Job description", { exact: true }).fill("Required: React and TypeScript.");
     await page.getByRole("button", { exact: true, name: "Save application" }).click();
-    await expect(page.getByRole("heading", { exact: true, name: "CareerOS E2E Added GmbH" })).toBeVisible();
+    await expect(page.getByText("CareerOS E2E Added GmbH", { exact: true })).toBeVisible();
 
     const { data: createdApplication, error: createdApplicationError } = await admin
       .from("applications")
@@ -162,8 +164,9 @@ test.describe("authenticated dashboard UI", () => {
     expect(createdApplication).toMatchObject({ applied_date: "2026-07-11", source: "Company site" });
     createdApplicationId = createdApplication!.id;
 
-    await page.getByRole("link", { exact: true, name: "Applications" }).click();
-    await expect(page.locator(`#applications`)).toBeInViewport();
+    await page.getByTestId("dashboard-nav-desktop-applications").click();
+    await expect(page.getByRole("heading", { exact: true, name: "Applications" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "CareerOS Control" })).toHaveCount(0);
     await expect(page.getByTestId("dashboard-nav-desktop-applications")).toHaveAttribute(
       "aria-current",
       "location",
@@ -220,7 +223,9 @@ test.describe("authenticated dashboard UI", () => {
       status: "interview",
     });
 
-    await page.goto("/dashboard#work-hours");
+    await page.getByTestId("dashboard-nav-desktop-work-hours").click();
+    await expect(page.getByRole("heading", { exact: true, name: "Work Hours" })).toBeVisible();
+    await expect(page.getByText("Work hour permit", { exact: true })).toBeVisible();
     await page.getByRole("button", { exact: true, name: "Log hours" }).click();
     await page.locator('input[name="work_date"]').fill("2026-07-10");
     await page.locator('input[name="employer"]').fill("CareerOS E2E GmbH");
@@ -238,7 +243,8 @@ test.describe("authenticated dashboard UI", () => {
     expect(workLogError).toBeNull();
     expect(workLog?.id).toBeTruthy();
 
-    await page.goto("/dashboard#profile");
+    await page.getByTestId("dashboard-nav-desktop-profile").click();
+    await expect(page.getByRole("heading", { exact: true, name: "Profile" })).toBeVisible();
     await page.getByTestId("profile-current-city").fill("Frankfurt");
     await page.getByTestId("profile-work-authorization").selectOption("student_visa");
     await page.getByTestId("profile-languages").fill("English C1, German B1");
@@ -246,7 +252,7 @@ test.describe("authenticated dashboard UI", () => {
     await page.getByTestId("profile-save").click();
     await expect(page.getByText("Profile saved.", { exact: true })).toBeVisible();
 
-    await page.getByRole("link", { exact: true, name: "Skill Gap" }).click();
+    await page.getByTestId("dashboard-nav-desktop-skill-gap").click();
     await expect(page.getByRole("heading", { exact: true, name: "Extract the real ask" })).toBeVisible();
     await page.getByRole("combobox", { exact: true, name: "Application source" }).selectOption(applicationId);
     await page.getByTestId("evidence-confidence-react").selectOption("direct");
@@ -258,10 +264,11 @@ test.describe("authenticated dashboard UI", () => {
       .fill("https://github.com/example/careeros-e2e");
     await page.getByTestId("evidence-save-react").click();
     await expect(page.getByTestId("evidence-save-react")).toHaveText("Saved");
-    await page.getByRole("link", { exact: true, name: "Overview" }).click();
+    await page.reload();
+    await page.getByTestId("dashboard-nav-desktop-overview").click();
     await expect(page.getByTestId("analytics-evidence-ready")).toHaveText("1");
 
-    await page.getByRole("link", { exact: true, name: "Skill Gap" }).click();
+    await page.getByTestId("dashboard-nav-desktop-skill-gap").click();
     await expect(page.getByTestId("sprint-create")).toBeVisible();
     await page.getByRole("button", { exact: true, name: "3d" }).click();
     await page.getByTestId("sprint-create").click();
@@ -306,7 +313,7 @@ test.describe("authenticated dashboard UI", () => {
     expect(sprintTasks).toHaveLength(3);
     expect(sprintTasks?.every((task) => task.completed && task.proof_url)).toBe(true);
 
-    await page.getByRole("link", { exact: true, name: "CV Check" }).click();
+    await page.getByTestId("dashboard-nav-desktop-cv-check").click();
     await expect(page.getByRole("heading", { exact: true, name: "Readability before tailoring" })).toBeVisible();
     await page.locator('input[type="file"][accept="application/pdf,.pdf"]').setInputFiles({
       name: "careeros-cv.pdf",
@@ -320,11 +327,12 @@ test.describe("authenticated dashboard UI", () => {
     await page.getByTestId("cv-save").click();
     await expect(page.getByText("CV saved.", { exact: true })).toBeVisible();
     await page.reload();
+    await page.getByTestId("dashboard-nav-desktop-cv-check").click();
     await expect(page.getByPlaceholder("Paste plain CV text here, or upload a text-based PDF above.")).toHaveValue(
       /CareerOS PDF CV React TypeScript Next.js Evidence Portfolio/,
     );
 
-    await page.getByRole("link", { exact: true, name: "AI Insights" }).click();
+    await page.getByTestId("dashboard-nav-desktop-ai-insights").click();
     await page.getByPlaceholder("Paste your own provider key").fill("short");
     await page.getByRole("button", { exact: true, name: "Save encrypted key" }).click();
     await expect(page.getByText("Paste a valid API key before saving.", { exact: true })).toBeVisible();
@@ -332,8 +340,8 @@ test.describe("authenticated dashboard UI", () => {
     await page.getByPlaceholder("Paste your own provider key").fill("test-key-12345678");
     await page.getByRole("button", { exact: true, name: "Save encrypted key" }).click();
     await expect(page.getByText("Key saved encrypted. It will only be used from server routes.", { exact: true })).toBeVisible();
-    await page.getByRole("link", { exact: true, name: "Skill Gap" }).click();
-    await expect(page.locator("#skill-gap").getByRole("button", { exact: true, name: "Get AI insight" })).toBeVisible();
+    await page.getByTestId("dashboard-nav-desktop-skill-gap").click();
+    await expect(page.getByRole("button", { exact: true, name: "Get AI insight" })).toBeVisible();
 
     const { error: clearApplicationsError } = await admin
       .from("applications")
@@ -353,16 +361,17 @@ test.describe("authenticated dashboard UI", () => {
       .eq("user_id", userId);
     expect(clearCvError).toBeNull();
 
-    await page.goto(`/dashboard?empty-check=${Date.now()}#overview`);
+    await page.reload();
+    await page.getByTestId("dashboard-nav-desktop-overview").click();
     await expect(page.getByRole("heading", { exact: true, name: "CareerOS Control" })).toBeVisible();
     await expect(page.getByText("No applications yet", { exact: true })).toBeVisible();
 
-    await page.goto(`/dashboard?empty-check=${Date.now()}#cv-check`);
+    await page.getByTestId("dashboard-nav-desktop-cv-check").click();
     await expect(page.getByRole("heading", { exact: true, name: "Readability before tailoring" })).toBeVisible();
     await expect(page.getByPlaceholder("Paste plain CV text here, or upload a text-based PDF above.")).toHaveValue("");
-    await page.getByRole("link", { exact: true, name: "Skill Gap" }).click();
+    await page.getByTestId("dashboard-nav-desktop-skill-gap").click();
     await expect(page.getByText("Paste a detailed job description to build an evidence map.", { exact: true })).toBeVisible();
-    await page.getByRole("link", { exact: true, name: "Assistant" }).click();
+    await page.getByTestId("dashboard-nav-desktop-assistant").click();
     await expect(
       page.getByText("Add an application with a job description to generate evidence-backed suggestions.", { exact: true }),
     ).toBeVisible();
@@ -389,5 +398,10 @@ test.describe("authenticated dashboard UI", () => {
       () => document.documentElement.scrollWidth > window.innerWidth || document.body.scrollWidth > window.innerWidth,
     );
     expect(documentOverflow).toBe(false);
+
+    const documentHeightOverflow = await page.evaluate(
+      () => document.documentElement.scrollHeight > window.innerHeight + 1 || document.body.scrollHeight > window.innerHeight + 1,
+    );
+    expect(documentHeightOverflow).toBe(false);
   });
 });

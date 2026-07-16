@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createClient } from "@/lib/supabase/browser";
 import { formatAuthError, isEmailNotConfirmedError } from "@/lib/auth-errors";
 
-type AuthMode = "login" | "signup";
+type AuthMode = "login" | "signup" | "reset";
 
 const emptySubscribe = () => () => {};
 const getClientHydration = () => true;
@@ -31,6 +31,7 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
   const submittingRef = useRef(false);
   const router = useRouter();
   const isLogin = mode === "login";
+  const isReset = mode === "reset";
   const isHydrated = useSyncExternalStore(
     emptySubscribe,
     getClientHydration,
@@ -91,6 +92,28 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
     try {
       const supabase = createClient();
       const normalizedEmail = email.trim();
+
+      if (isReset) {
+        const resetEmail = normalizedEmail;
+
+        if (!resetEmail) {
+          setError("Enter your email address first.");
+          return;
+        }
+
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+          redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+        });
+
+        if (resetError) {
+          setError(formatAuthError(resetError.message));
+          return;
+        }
+
+        setResetCooldown(60);
+        setMessage("Password reset email sent. Check your inbox or spam folder.");
+        return;
+      }
 
       if (isLogin) {
         const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -181,31 +204,6 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
     }
   }
 
-  async function handlePasswordReset() {
-    if (resetCooldown > 0) return;
-
-    setError(null);
-    setMessage(null);
-
-    if (!email) {
-      setError("Enter your email first, then request a reset link.");
-      return;
-    }
-
-    const supabase = createClient();
-    setResetCooldown(60);
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
-    });
-
-    if (resetError) {
-      setError(formatAuthError(resetError.message));
-      return;
-    }
-
-    setMessage("Password reset email sent. Check your inbox or spam folder.");
-  }
-
   async function handleResendConfirmation() {
     if (!confirmationEmail || resendCooldown > 0) return;
 
@@ -253,17 +251,21 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
       <div className="text-center">
         <div className="auth-mode-content" key={`heading-${mode}`}>
           <h2 className="text-3xl font-bold tracking-[-0.02em] text-white">
-            {isLogin ? "Welcome Back" : "Create Account"}
+            {isLogin ? "Welcome Back" : isReset ? "Reset Password" : "Create Account"}
           </h2>
           <p className="mt-3 text-base font-medium text-white/58">
-            {isLogin ? "Sign in to continue to CareerOS" : "Start your CareerOS workspace"}
+            {isLogin
+              ? "Sign in to continue to CareerOS"
+              : isReset
+                ? "We will send you a secure reset link"
+                : "Start your CareerOS workspace"}
           </p>
         </div>
       </div>
 
       <form className="mt-4 flex flex-col sm:mt-6" onSubmit={handleSubmit}>
         <div className="auth-mode-content space-y-2.5 sm:space-y-3" key={`fields-${mode}`}>
-          {!isLogin && (
+          {!isLogin && !isReset && (
             <AuthInput
               icon={<User size={22} strokeWidth={1.9} />}
               onChange={setFullName}
@@ -282,7 +284,7 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
             value={email}
           />
 
-          <label className="relative block">
+          {!isReset && <label className="relative block">
             <Lock
               className="absolute left-5 top-1/2 z-10 -translate-y-1/2 text-white/46"
               size={22}
@@ -309,9 +311,9 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
                 <Eye size={20} strokeWidth={1.9} />
               )}
             </button>
-          </label>
+          </label>}
 
-          {!isLogin && (
+          {!isLogin && !isReset && (
             <AuthInput
               icon={<BriefcaseBusiness size={22} strokeWidth={1.9} />}
               onChange={setTargetRole}
@@ -338,12 +340,14 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
           {isLogin && (
             <button
               className="text-white/72 transition hover:text-white disabled:cursor-not-allowed disabled:text-white/35"
-              disabled={resetCooldown > 0}
-              onClick={handlePasswordReset}
+              onClick={() => switchMode("reset")}
               type="button"
             >
-              {resetCooldown > 0 ? `Try again in ${resetCooldown}s` : "Forgot password?"}
+              Forgot password?
             </button>
+          )}
+          {isReset && resetCooldown > 0 && (
+            <span className="ml-auto text-white/52">You can request another link in {resetCooldown}s.</span>
           )}
         </div>
 
@@ -375,42 +379,51 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
 
         <button
           className="auth-reference-primary mt-5 flex min-h-[50px] w-full items-center justify-center gap-2 rounded-[16px] bg-white px-6 text-base font-semibold text-black transition hover:-translate-y-0.5 hover:bg-white/92 disabled:cursor-not-allowed disabled:opacity-70 sm:mt-6 sm:min-h-[52px] sm:text-lg"
-          disabled={!isHydrated || status === "loading" || (!isLogin && signupCooldown > 0)}
+          disabled={
+            !isHydrated ||
+            status === "loading" ||
+            (isReset && resetCooldown > 0) ||
+            (!isLogin && !isReset && signupCooldown > 0)
+          }
           type="submit"
         >
           {status === "loading"
             ? "Working..."
-            : !isLogin && signupCooldown > 0
+            : isReset && resetCooldown > 0
+              ? `Try again in ${resetCooldown}s`
+              : !isLogin && !isReset && signupCooldown > 0
               ? `Try again in ${signupCooldown}s`
-              : isLogin
+              : isReset
+                ? "Send reset link"
+                : isLogin
                 ? "Sign In"
                 : "Create Account"}
           <ArrowRight size={20} strokeWidth={2} />
         </button>
 
-        <div className="my-3 flex items-center gap-5 sm:my-4">
+        {!isReset && <div className="my-3 flex items-center gap-5 sm:my-4">
           <span className="h-px flex-1 bg-white/10" />
           <span className="text-sm font-semibold text-white/42">or</span>
           <span className="h-px flex-1 bg-white/10" />
-        </div>
+        </div>}
 
-        <button
+        {!isReset && <button
           className="auth-google-button flex min-h-[46px] shrink-0 items-center justify-center gap-3 rounded-[16px] border border-white/16 bg-white/5 px-4 text-base font-semibold text-white/78 transition hover:border-white/28 hover:bg-white/8 hover:text-white sm:min-h-[48px]"
           onClick={handleGoogleAuth}
           type="button"
         >
           <span className="text-xl font-bold">G</span>
           {isLogin ? "Sign in with Google" : "Sign up with Google"}
-        </button>
+        </button>}
 
         <p className="mt-4 shrink-0 text-center text-sm font-medium text-white/58 sm:mt-5">
-          {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+          {isReset ? "Remembered your password?" : isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
             className="font-bold text-white transition hover:text-white/76"
-            onClick={() => switchMode(isLogin ? "signup" : "login")}
+            onClick={() => switchMode(isReset ? "login" : isLogin ? "signup" : "login")}
             type="button"
           >
-            {isLogin ? "Sign up" : "Sign in"}
+            {isReset ? "Sign in" : isLogin ? "Sign up" : "Sign in"}
           </button>
         </p>
       </form>
