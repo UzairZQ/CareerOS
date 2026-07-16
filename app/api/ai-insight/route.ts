@@ -61,7 +61,11 @@ export async function POST(request: NextRequest) {
     .maybeSingle<StoredAiProviderSetting>();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    console.error("AI insight settings lookup failed.", error);
+    return NextResponse.json(
+      { error: "AI settings could not be loaded. Try again shortly." },
+      { status: 500 },
+    );
   }
 
   if (!setting) {
@@ -81,13 +85,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ insight });
   } catch (insightError) {
+    console.error("AI provider request failed.", insightError);
     return NextResponse.json(
-      {
-        error:
-          insightError instanceof Error
-            ? insightError.message
-            : "AI provider request failed.",
-      },
+      { error: "AI provider request failed. Check the key and selected model." },
       { status: 502 },
     );
   }

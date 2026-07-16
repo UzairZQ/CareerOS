@@ -36,7 +36,11 @@ export async function GET() {
     .returns<AiProviderSetting[]>();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    console.error("AI settings read failed.", error);
+    return NextResponse.json(
+      { error: "AI settings could not be loaded. Try again shortly." },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ settings: data ?? [] });
@@ -84,7 +88,11 @@ export async function POST(request: NextRequest) {
   );
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    console.error("AI settings save failed.", error);
+    return NextResponse.json(
+      { error: "AI settings could not be saved. Try again shortly." },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({
@@ -125,7 +133,11 @@ export async function DELETE(request: NextRequest) {
     .eq("provider", parsedDelete.data.provider);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    console.error("AI settings delete failed.", error);
+    return NextResponse.json(
+      { error: "AI settings could not be removed. Try again shortly." },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ ok: true });
