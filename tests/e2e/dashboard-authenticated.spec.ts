@@ -134,6 +134,9 @@ test.describe("authenticated dashboard UI", () => {
 
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(page.getByRole("heading", { name: "CareerOS Control" })).toBeVisible();
+    await expect(page.getByTestId("dashboard-greeting")).toHaveText(
+      /Good (morning|afternoon|evening), CareerOS/,
+    );
     await expect(page.getByTestId("dashboard-nav-desktop-overview")).toHaveAttribute(
       "aria-current",
       "location",

@@ -64,12 +64,6 @@ export default async function DashboardPage() {
   const fullName = profile.full_name || "CareerOS User";
   const targetRole = profile.target_roles[0] || "International Student";
   const profileReadiness = calculateProfileReadiness(profile);
-  const initials = fullName
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
   const dashboardApplications: DashboardApplicationCard[] = storedApplications.map(
     (application) => ({
       id: application.id,
@@ -106,7 +100,6 @@ export default async function DashboardPage() {
       evidence={storedEvidence}
       evidenceTableReady={!evidenceError}
       fullName={fullName}
-      initials={initials}
       profile={profile}
       profileReadiness={profileReadiness}
       profileTableReady={!userProfileError}

@@ -1,7 +1,7 @@
 "use client";
 
 import { Bell, HelpCircle, Search, ShieldCheck, SlidersHorizontal } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AddApplicationForm } from "@/components/add-application-form";
 import { AiSettingsPanel } from "@/components/ai-settings-panel";
 import {
@@ -23,6 +23,7 @@ import { SignOutButton } from "@/components/sign-out-button";
 import { WorkHoursPermit } from "@/components/work-hours-permit";
 import type { AiProviderSettingSummary } from "@/components/ai-insight-button";
 import type { DashboardAnalytics } from "@/lib/dashboard-analytics";
+import { getFirstName, getTimeGreeting } from "@/lib/dashboard-greeting";
 import type { UserProfileData } from "@/lib/user-profile";
 import type { WorkHourLog } from "@/lib/work-hours";
 
@@ -70,7 +71,6 @@ type DashboardShellProps = {
   evidence: DashboardEvidence[];
   evidenceTableReady: boolean;
   fullName: string;
-  initials: string;
   profile: UserProfileData;
   profileReadiness: number;
   profileTableReady: boolean;
@@ -101,7 +101,6 @@ export function DashboardShell({
   evidence,
   evidenceTableReady,
   fullName,
-  initials,
   profile,
   profileReadiness,
   profileTableReady,
@@ -111,7 +110,15 @@ export function DashboardShell({
   workHoursTableReady,
 }: DashboardShellProps) {
   const [activeModule, setActiveModule] = useState<DashboardModule>("overview");
+  const [greeting, setGreeting] = useState("Welcome back");
   const activeLabel = navItems.find((item) => item.module === activeModule)?.label ?? "Overview";
+  const firstName = getFirstName(fullName);
+
+  useEffect(() => {
+    // Use the browser's local time after hydration so the greeting never causes a server/client mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setGreeting(getTimeGreeting());
+  }, []);
 
   function navigateTo(module: DashboardModule) {
     setActiveModule(module);
@@ -126,19 +133,13 @@ export function DashboardShell({
           </div>
 
           <div className="mb-7 rounded-[22px] border border-white/10 bg-white/[0.04] p-4">
-            <div className="mb-3 flex items-center gap-3">
-              <div className="grid h-12 w-12 place-items-center rounded-full border-2 border-white bg-[#D9DEE8] text-base font-semibold text-[#171A1F]">
-                {initials}
-              </div>
-              <div className="min-w-0">
-                <p className="truncate font-serif text-lg font-normal tracking-[-0.01em]">{fullName}</p>
-                <p className="truncate text-xs text-white/52">{targetRole}</p>
-              </div>
-            </div>
-            <div className="flex items-center justify-between rounded-2xl bg-[#171A1F] px-3 py-2">
-              <span className="text-xs text-white/56">Profile readiness</span>
-              <span className="font-serif text-xl leading-none text-white">{profileReadiness}%</span>
-            </div>
+            <p className="mb-2 font-mono text-[0.67rem] uppercase tracking-[0.16em] text-white/48">
+              Personal workspace
+            </p>
+            <p className="font-serif text-[1.7rem] font-normal leading-none tracking-[-0.01em]" data-testid="dashboard-greeting">
+              {greeting}, {firstName}
+            </p>
+            <p className="mt-3 text-sm leading-5 text-white/58">{targetRole}</p>
           </div>
 
           <DashboardNavigation
@@ -194,6 +195,7 @@ export function DashboardShell({
                 analytics={analytics}
                 applications={dashboardApplications}
                 onNavigate={navigateTo}
+                profileReadiness={profileReadiness}
                 workHourLogs={workHourLogs}
                 workHoursTableReady={workHoursTableReady}
                 userId={userId}
@@ -306,6 +308,7 @@ function OverviewModule({
   analytics,
   applications,
   onNavigate,
+  profileReadiness,
   userId,
   workHourLogs,
   workHoursTableReady,
@@ -313,6 +316,7 @@ function OverviewModule({
   analytics: DashboardAnalytics;
   applications: DashboardApplicationCard[];
   onNavigate: (module: DashboardModule) => void;
+  profileReadiness: number;
   userId: string;
   workHourLogs: WorkHourLog[];
   workHoursTableReady: boolean;
@@ -326,7 +330,7 @@ function OverviewModule({
           </h1>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.55fr)_0.56fr_0.56fr]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_repeat(3,minmax(0,0.62fr))]">
           <div>
             <WorkHoursPermit
               logs={workHourLogs}
@@ -345,6 +349,12 @@ function OverviewModule({
             title={`${analytics.responseRate}%`}
             tone="sage"
             value={`${analytics.totalApplications} applications`}
+          />
+          <MiniStatusCard
+            label="Profile readiness"
+            title={`${profileReadiness}%`}
+            tone="blue"
+            value="Profile context"
           />
         </div>
       </section>
@@ -432,7 +442,7 @@ function MiniStatusCard({
 }: {
   label: string;
   title: string;
-  tone: "clay" | "sage";
+  tone: "blue" | "clay" | "sage";
   value: string;
 }) {
   return (
