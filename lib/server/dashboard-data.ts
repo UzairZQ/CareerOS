@@ -5,6 +5,7 @@ import { calculateDashboardAnalytics } from "@/lib/dashboard-analytics";
 import type { AiProvider } from "@/lib/ai-providers";
 import type { UserProfileData } from "@/lib/user-profile";
 import { getYearRange, type WorkHourLog } from "@/lib/work-hours";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type ApplicationRecord = {
   applied_date: string | null;
@@ -54,6 +55,7 @@ export async function loadDashboardData(
   userId: string,
 ): Promise<DashboardData> {
   // These queries do not depend on one another, so fetch them together.
+  const admin = createAdminClient();
   const [profileResult, applicationsResult, workHoursResult, aiSettingsResult] = await Promise.all([
     supabase
       .from("user_profiles")
@@ -74,7 +76,7 @@ export async function loadDashboardData(
       .lte("work_date", getYearRange().end)
       .order("work_date", { ascending: false })
       .returns<WorkHourLog[]>(),
-    supabase
+    admin
       .from("ai_provider_settings")
       .select("provider, key_hint, enabled")
       .eq("user_id", userId)

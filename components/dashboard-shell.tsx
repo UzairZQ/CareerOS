@@ -245,6 +245,7 @@ export function DashboardShell({
                   role: application.role,
                   job_description: application.job_description,
                 }))}
+                cvText={profile.cv_text}
                 evidenceTableReady={evidenceTableReady}
                 initialEvidence={evidence}
                 userId={userId}

@@ -55,13 +55,13 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
   useEffect(() => {
     if (resendCooldown === 0 && resetCooldown === 0 && signupCooldown === 0) return;
 
-    const timer = window.setInterval(() => {
+    const timer = window.setTimeout(() => {
       setResendCooldown((current) => Math.max(0, current - 1));
       setResetCooldown((current) => Math.max(0, current - 1));
       setSignupCooldown((current) => Math.max(0, current - 1));
     }, 1000);
 
-    return () => window.clearInterval(timer);
+    return () => window.clearTimeout(timer);
   }, [resendCooldown, resetCooldown, signupCooldown]);
 
   function switchMode(nextMode: AuthMode) {
@@ -198,6 +198,9 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
         // Local storage is optional; the in-memory cooldown still applies.
       }
       setMessage("Account created. Check your email, then sign in. Only request one resend if needed.");
+    } catch (authError) {
+      const message = authError instanceof Error ? authError.message : "Network request failed.";
+      setError(formatAuthError(message));
     } finally {
       submittingRef.current = false;
       setStatus("idle");
@@ -211,37 +214,51 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
     setMessage(null);
     setResendCooldown(60);
 
-    const supabase = createClient();
-    const { error: resendError } = await supabase.auth.resend({
-      email: confirmationEmail,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-      type: "signup",
-    });
+    try {
+      const supabase = createClient();
+      const { error: resendError } = await supabase.auth.resend({
+        email: confirmationEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+        type: "signup",
+      });
 
-    if (resendError) {
-      setError(formatAuthError(resendError.message));
-      return;
+      if (resendError) {
+        setResendCooldown(0);
+        setError(formatAuthError(resendError.message));
+        return;
+      }
+
+      setMessage(`Confirmation email sent to ${confirmationEmail}. You can request another after the cooldown.`);
+    } catch (resendError) {
+      setResendCooldown(0);
+      setError(formatAuthError(resendError instanceof Error ? resendError.message : "Network request failed."));
     }
-
-    setMessage(`Confirmation email sent to ${confirmationEmail}. You can request another after the cooldown.`);
   }
 
   async function handleGoogleAuth() {
     setError(null);
     setMessage(null);
 
-    const supabase = createClient();
-    const { error: googleError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    try {
+      const supabase = createClient();
+      const { error: googleError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
-    if (googleError) {
-      setError(formatAuthError(googleError.message));
+      if (googleError) {
+        setError(formatAuthError(googleError.message));
+      }
+    } catch (googleError) {
+      setError(
+        formatAuthError(
+          googleError instanceof Error ? googleError.message : "Network request failed.",
+        ),
+      );
     }
   }
 
@@ -267,6 +284,7 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
         <div className="auth-mode-content space-y-2.5 sm:space-y-3" key={`fields-${mode}`}>
           {!isLogin && !isReset && (
             <AuthInput
+              id="auth-full-name"
               icon={<User size={22} strokeWidth={1.9} />}
               onChange={setFullName}
               placeholder="Full name"
@@ -276,6 +294,7 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
           )}
 
           <AuthInput
+            id="auth-email"
             icon={<Mail size={22} strokeWidth={1.9} />}
             onChange={handleEmailChange}
             placeholder="Email address"
@@ -284,7 +303,8 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
             value={email}
           />
 
-          {!isReset && <label className="relative block">
+          {!isReset && <div className="relative block">
+            <label className="sr-only" htmlFor="auth-password">Password</label>
             <Lock
               className="absolute left-5 top-1/2 z-10 -translate-y-1/2 text-white/46"
               size={22}
@@ -292,6 +312,7 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
             />
             <input
               className="auth-reference-input pr-14"
+              id="auth-password"
               minLength={8}
               onChange={(event) => setPassword(event.target.value)}
               placeholder="Password"
@@ -311,10 +332,11 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
                 <Eye size={20} strokeWidth={1.9} />
               )}
             </button>
-          </label>}
+          </div>}
 
           {!isLogin && !isReset && (
             <AuthInput
+              id="auth-target-role"
               icon={<BriefcaseBusiness size={22} strokeWidth={1.9} />}
               onChange={setTargetRole}
               placeholder="Target role"
@@ -433,6 +455,7 @@ export function AuthPanel({ initialError = null }: { initialError?: string | nul
 }
 
 function AuthInput({
+  id,
   icon,
   onChange,
   placeholder,
@@ -440,6 +463,7 @@ function AuthInput({
   type = "text",
   value,
 }: {
+  id: string;
   icon: React.ReactNode;
   onChange: (value: string) => void;
   placeholder: string;
@@ -448,18 +472,20 @@ function AuthInput({
   value: string;
 }) {
   return (
-    <label className="relative block">
+    <div className="relative block">
+      <label className="sr-only" htmlFor={id}>{placeholder}</label>
       <span className="absolute left-5 top-1/2 z-10 -translate-y-1/2 text-white/46">
         {icon}
       </span>
       <input
         className="auth-reference-input"
+        id={id}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         required={required}
         type={type}
         value={value}
       />
-    </label>
+    </div>
   );
 }

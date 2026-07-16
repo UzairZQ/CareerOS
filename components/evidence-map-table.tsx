@@ -90,6 +90,7 @@ export function EvidenceMapTable({
                   {skill.category} · {skill.hits} signal{skill.hits === 1 ? "" : "s"}
                 </p>
                 <select
+                  aria-label={`Confidence for ${skill.skill}`}
                   className={`mt-3 w-full rounded-xl border px-3 py-2 text-xs font-semibold outline-none ${confidenceClasses[row.confidence]}`}
                   data-testid={`evidence-confidence-${skillId}`}
                   onChange={(event) =>
@@ -109,6 +110,7 @@ export function EvidenceMapTable({
 
               <div className="space-y-2">
                 <textarea
+                  aria-label={`Evidence for ${skill.skill}`}
                   className="dashboard-input min-h-[96px] w-full resize-y text-sm leading-5"
                   data-testid={`evidence-summary-${skillId}`}
                   onChange={(event) => onUpdateEvidence(skill.skill, { evidence: event.target.value })}
@@ -116,6 +118,7 @@ export function EvidenceMapTable({
                   value={row.evidence}
                 />
                 <input
+                  aria-label={`Proof link for ${skill.skill}`}
                   className="dashboard-input min-h-0 w-full py-2 text-sm"
                   data-testid={`evidence-proof-${skillId}`}
                   onChange={(event) => onUpdateEvidence(skill.skill, { proofLink: event.target.value })}

@@ -14,6 +14,7 @@ import {
   type SprintStatus,
 } from "@/components/learning-sprint-panel";
 import type { JobAnalysis, SkillConfidence, SkillMatch } from "@/lib/analyzer-types";
+import { analyzeCvText } from "@/lib/careeros-analyzer";
 import type { ApplicationOption } from "@/components/jd-evidence-types";
 
 export function JdAnalyzerPanel({
@@ -21,6 +22,7 @@ export function JdAnalyzerPanel({
   analysis,
   applications,
   canPersistEvidence,
+  cvText,
   evidenceMap,
   evidenceTableReady,
   jobDescription,
@@ -33,6 +35,7 @@ export function JdAnalyzerPanel({
   analysis: JobAnalysis;
   applications: ApplicationOption[];
   canPersistEvidence: boolean;
+  cvText?: string | null;
   evidenceMap: Record<string, EvidenceRow>;
   evidenceTableReady: boolean;
   jobDescription: string;
@@ -41,6 +44,10 @@ export function JdAnalyzerPanel({
   selectedApplicationId: string;
   sprintSkills: SkillMatch[];
 }) {
+  const cvComparison = cvText?.trim() && jobDescription.trim()
+    ? analyzeCvText(cvText, jobDescription)
+    : null;
+
   return (
     <article className="card-sheen dashboard-card-tint dashboard-card-plum rounded-[22px] p-4 shadow-dashboard-card md:p-5">
       <div className="mb-4 flex items-start justify-between gap-4">
@@ -106,6 +113,36 @@ export function JdAnalyzerPanel({
       <div className="mt-4 rounded-[20px] border border-white/10 bg-[#171A1F]/54 p-4">
         <p className="mb-2 text-sm font-semibold uppercase tracking-[0.13em] text-[#AEB6C2]">Fit summary</p>
         <p className="text-sm leading-6 text-white/78">{analysis.fitSummary}</p>
+      </div>
+
+      <div className="mt-4 rounded-[20px] border border-white/10 bg-[#171A1F]/54 p-4">
+        <p className="mb-2 text-sm font-semibold uppercase tracking-[0.13em] text-[#AEB6C2]">
+          Saved CV comparison
+        </p>
+        {cvComparison ? (
+          <div className="grid gap-3 text-sm sm:grid-cols-2">
+            <div>
+              <p className="text-white/58">Matched JD skills</p>
+              <p className="mt-1 font-semibold text-[#DDF0DD]">
+                {cvComparison.keywordMatches.length > 0
+                  ? cvComparison.keywordMatches.join(", ")
+                  : "None detected yet"}
+              </p>
+            </div>
+            <div>
+              <p className="text-white/58">Missing from your CV</p>
+              <p className="mt-1 font-semibold text-[#FFD8B0]">
+                {cvComparison.missingKeywords.length > 0
+                  ? cvComparison.missingKeywords.join(", ")
+                  : "No known skill gaps detected"}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm leading-6 text-white/72">
+            Save your CV once in CV Check to compare it with this job description here.
+          </p>
+        )}
       </div>
 
       <div className="mt-4">

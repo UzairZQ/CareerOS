@@ -164,6 +164,12 @@ those rows to applications they own. The repository integration test now proves
 that invariant and will remain red against a database that has not received the
 migration.
 
+The migration `supabase/migrations/20260716_protect_ai_provider_secrets.sql`
+removes the authenticated browser-readable policy for encrypted BYOK settings.
+The app now reads those settings through authenticated server routes and the
+server-only Supabase admin client. This migration is also pending in the live
+project and should be applied after the related-row RLS migration.
+
 Current `applications` fields:
 - `id`
 - `user_id`
@@ -519,7 +525,7 @@ Current production-hardening notes:
 - `/api/ai-insight` rejects malformed/oversized payloads, uses authenticated per-user encrypted keys, and applies a 30-second provider timeout.
 - Auth provider errors are normalized into user-friendly messages, including a clear email-send rate-limit state.
 - Email-confirmation and password-reset actions are guarded by cooldowns so the UI does not encourage repeated provider requests.
-- AI defaults are current and configurable through `CAREEROS_GEMINI_MODEL`, `CAREEROS_GROQ_MODEL`, and `CAREEROS_OPENROUTER_MODEL`; current defaults are Gemini 2.5 Flash, Groq GPT-OSS 20B, and OpenRouter Google Gemini 2.5 Flash.
+- AI defaults are configurable through `CAREEROS_GEMINI_MODEL`, `CAREEROS_GROQ_MODEL`, and `CAREEROS_OPENROUTER_MODEL`; current defaults are Gemini 3.5 Flash, Groq GPT-OSS 20B, and OpenRouter Google Gemini 3.5 Flash.
 - Async form handlers capture their form element before Supabase awaits, so successful add-job and work-hour submissions do not hit React's cleared `event.currentTarget`.
 - Optional dashboard validation fields accept `null` as well as empty strings, matching the database payloads for blank profile/evidence fields.
 - Saving or removing a BYOK provider calls `router.refresh()` so already-rendered AI insight controls reflect the new setting immediately.

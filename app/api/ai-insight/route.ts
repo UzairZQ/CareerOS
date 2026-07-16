@@ -6,6 +6,7 @@ import {
 } from "@/lib/ai-providers";
 import { aiInsightRequestSchema, formatValidationError } from "@/lib/dashboard-validation";
 import { decryptSecret } from "@/lib/server/secret-crypto";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 type StoredAiProviderSetting = {
@@ -23,6 +24,8 @@ export async function POST(request: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const admin = createAdminClient();
 
   let body: unknown;
 
@@ -49,7 +52,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { data: setting, error } = await supabase
+  const { data: setting, error } = await admin
     .from("ai_provider_settings")
     .select("provider, encrypted_api_key, enabled")
     .eq("user_id", user.id)

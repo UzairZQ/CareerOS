@@ -210,11 +210,9 @@ create table if not exists public.ai_provider_settings (
 
 alter table public.ai_provider_settings enable row level security;
 
+-- Encrypted provider keys are server-only. Server routes read this table with
+-- the service-role client and expose only key hints to browser clients.
 drop policy if exists "Users can read own ai provider settings" on public.ai_provider_settings;
-create policy "Users can read own ai provider settings"
-on public.ai_provider_settings for select
-to authenticated
-using (auth.uid() = user_id);
 
 drop policy if exists "Users can create own ai provider settings" on public.ai_provider_settings;
 create policy "Users can create own ai provider settings"

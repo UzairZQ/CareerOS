@@ -39,12 +39,14 @@ import { createClient } from "@/lib/supabase/browser";
 
 export function JdEvidenceWorkspace({
   applications,
+  cvText,
   evidenceTableReady = true,
   aiSettings,
   initialEvidence,
   userId,
 }: {
   applications: ApplicationOption[];
+  cvText?: string | null;
   evidenceTableReady?: boolean;
   aiSettings: AiProviderSettingSummary[];
   initialEvidence: InitialEvidenceItem[];
@@ -484,11 +486,12 @@ export function JdEvidenceWorkspace({
 
   return (
     <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-      <JdAnalyzerPanel
-        aiSettings={aiSettings}
-        analysis={analysis}
-        applications={applications}
-        canPersistEvidence={canPersistEvidence}
+            <JdAnalyzerPanel
+              aiSettings={aiSettings}
+              analysis={analysis}
+              applications={applications}
+              canPersistEvidence={canPersistEvidence}
+              cvText={cvText}
         evidenceMap={evidenceMap}
         evidenceTableReady={evidenceTableReady}
         jobDescription={jobDescription}

@@ -12,6 +12,13 @@ export function SlowBackgroundVideo({ src }: SlowBackgroundVideoProps) {
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) {
+      video.pause();
+      return;
+    }
+
     video.playbackRate = 1;
 
     void video.play().catch(() => {
@@ -29,7 +36,7 @@ export function SlowBackgroundVideo({ src }: SlowBackgroundVideoProps) {
       loop
       muted
       playsInline
-      preload="auto"
+      preload="metadata"
       src={src}
     />
   );

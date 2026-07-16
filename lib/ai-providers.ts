@@ -5,9 +5,9 @@ export type AiProvider = "gemini" | "groq" | "openrouter";
 export type AiInsightKind = "skill-gap" | "ats-check" | "application-angle";
 
 const providerModels = {
-  gemini: process.env.CAREEROS_GEMINI_MODEL ?? "gemini-2.5-flash",
+  gemini: process.env.CAREEROS_GEMINI_MODEL?.trim() || "gemini-3.5-flash",
   groq: process.env.CAREEROS_GROQ_MODEL ?? "openai/gpt-oss-20b",
-  openrouter: process.env.CAREEROS_OPENROUTER_MODEL ?? "google/gemini-2.5-flash",
+  openrouter: process.env.CAREEROS_OPENROUTER_MODEL?.trim() || "google/gemini-3.5-flash",
 } satisfies Record<AiProvider, string>;
 
 export const providerLabels: Record<AiProvider, string> = {
@@ -50,11 +50,11 @@ export async function requestAiInsight({
   }
 
   return requestOpenAiCompatible({
-      apiKey,
-      body: {
-        model: providerModels.openrouter,
-        messages: buildMessages(prompt),
-        temperature: 0.2,
+    apiKey,
+    body: {
+      model: providerModels.openrouter,
+      messages: buildMessages(prompt),
+      temperature: 0.2,
     },
     url: "https://openrouter.ai/api/v1/chat/completions",
   });

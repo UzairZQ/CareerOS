@@ -4,13 +4,18 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypt
 const algorithm = "aes-256-gcm";
 
 function getEncryptionKey() {
-  const secret = process.env.AI_KEY_ENCRYPTION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const secret = process.env.AI_KEY_ENCRYPTION_SECRET;
+  // Keep existing local keys readable during development, but never reuse the
+  // high-privilege service-role key in a production deployment.
+  const fallback = process.env.NODE_ENV === "production"
+    ? undefined
+    : process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!secret) {
-    throw new Error("Missing server encryption secret.");
+  if (!secret && !fallback) {
+    throw new Error("Missing AI_KEY_ENCRYPTION_SECRET.");
   }
 
-  return createHash("sha256").update(secret).digest();
+  return createHash("sha256").update(secret ?? fallback!).digest();
 }
 
 export function encryptSecret(value: string) {

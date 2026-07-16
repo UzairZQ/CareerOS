@@ -6,6 +6,7 @@ import {
   formatValidationError,
 } from "@/lib/dashboard-validation";
 import { encryptSecret, maskSecret } from "@/lib/server/secret-crypto";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 type AiProviderSetting = {
@@ -25,7 +26,9 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data, error } = await supabase
+  const admin = createAdminClient();
+
+  const { data, error } = await admin
     .from("ai_provider_settings")
     .select("provider, key_hint, enabled, updated_at")
     .eq("user_id", user.id)
@@ -49,6 +52,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const admin = createAdminClient();
+
   let body: unknown;
 
   try {
@@ -67,7 +72,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { apiKey, provider } = parsedSettings.data;
-  const { error } = await supabase.from("ai_provider_settings").upsert(
+  const { error } = await admin.from("ai_provider_settings").upsert(
     {
       user_id: user.id,
       provider,
@@ -101,6 +106,8 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const admin = createAdminClient();
+
   const provider = request.nextUrl.searchParams.get("provider") ?? "";
   const parsedDelete = aiSettingsDeleteSchema.safeParse({ provider });
 
@@ -111,7 +118,7 @@ export async function DELETE(request: NextRequest) {
     );
   }
 
-  const { error } = await supabase
+  const { error } = await admin
     .from("ai_provider_settings")
     .delete()
     .eq("user_id", user.id)

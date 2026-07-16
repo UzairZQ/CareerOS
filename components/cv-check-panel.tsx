@@ -266,8 +266,8 @@ export function CvCheckPanel({
         </div>
 
         <div className="mb-4 grid gap-4 lg:grid-cols-2">
-          <KeywordBox title="Detected from your CV" items={cvCheck.keywordMatches} tone="good" />
-          <KeywordBox title="Missing from JD" items={cvCheck.missingKeywords} tone="warn" />
+          <KeywordBox title="Matched JD skills" items={cvCheck.keywordMatches} tone="good" />
+          <KeywordBox title="Missing from your CV" items={cvCheck.missingKeywords} tone="warn" />
         </div>
 
         <div className="mb-4 rounded-[20px] border border-white/10 bg-[#171A1F]/54 p-4">
