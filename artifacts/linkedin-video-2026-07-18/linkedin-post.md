@@ -27,6 +27,6 @@ Built with Next.js, React, TypeScript, Tailwind CSS, Supabase, PostgreSQL, Zod, 
 
 This is a full-stack portfolio project in active development, and I am building it deliberately to learn the stack properly from the ground up.
 
-Demo data shown in the video is fictional.
+The video is a live product walkthrough through an authenticated demo workspace. Demo data shown is fictional.
 
 #Nextjs #React #TypeScript #Supabase #PostgreSQL #WebDevelopment #JobSearch
