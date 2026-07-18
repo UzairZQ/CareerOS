@@ -183,7 +183,7 @@ func drawScene(_ scene: Scene, progress: CGFloat, alpha: CGFloat, context: CGCon
   let footerY = min(cardRect.maxY + 78, CGFloat(height) - 85)
   NSGraphicsContext.saveGraphicsState()
   NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: true)
-  drawText("CAREEROS / GERMANY", in: CGRect(x: margin, y: footerY, width: 380, height: 24), font: labelFont, color: NSColor(white: 0.64, alpha: 1), alpha: fade)
+  drawText("CAREEROS / PROOF-FIRST", in: CGRect(x: margin, y: footerY, width: 380, height: 24), font: labelFont, color: NSColor(white: 0.64, alpha: 1), alpha: fade)
   drawText("proof-first job search", in: CGRect(x: CGFloat(width) - 365, y: footerY, width: 305, height: 24), font: labelFont, color: NSColor(white: 0.64, alpha: 1), alignment: .right, alpha: fade)
   NSGraphicsContext.restoreGraphicsState()
 }
