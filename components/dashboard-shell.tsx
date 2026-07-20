@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, HelpCircle, Search, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { ShieldCheck, SlidersHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AddApplicationForm } from "@/components/add-application-form";
 import { AiSettingsPanel } from "@/components/ai-settings-panel";
@@ -127,19 +127,9 @@ export function DashboardShell({
   return (
     <main className="h-[100dvh] min-h-0 overflow-hidden bg-[#171A1F] text-[#F7F8F6]">
       <section className="dashboard-frame grid h-full min-h-0 overflow-hidden lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="hidden min-h-0 flex-col bg-[#262B34] px-5 py-8 lg:flex">
-          <div className="mb-8 px-3 text-white">
+        <aside className="hidden min-h-0 flex-col bg-[#262B34] px-5 py-5 lg:flex">
+          <div className="mb-5 px-3 text-white">
             <CareerOSWordmark />
-          </div>
-
-          <div className="mb-7 rounded-[22px] border border-white/10 bg-white/[0.04] p-4">
-            <p className="mb-2 font-mono text-[0.67rem] uppercase tracking-[0.16em] text-white/48">
-              Personal workspace
-            </p>
-            <p className="font-serif text-[1.7rem] font-normal leading-none tracking-[-0.01em]" data-testid="dashboard-greeting">
-              {greeting}, {firstName}
-            </p>
-            <p className="mt-3 text-sm leading-5 text-white/58">{targetRole}</p>
           </div>
 
           <DashboardNavigation
@@ -152,21 +142,11 @@ export function DashboardShell({
         </aside>
 
         <section className="flex min-h-0 min-w-0 flex-col overflow-hidden bg-[#171A1F]">
-          <header className="flex shrink-0 items-center justify-between gap-6 px-6 pb-4 pt-4 md:px-8 lg:px-9 lg:pb-5 lg:pt-5">
-            <button
-              className="flex h-12 w-full max-w-[430px] items-center gap-3 rounded-xl border border-white/10 bg-[#222833] px-5 text-left text-[#AEB6C2] transition hover:border-white/20 hover:text-white"
-              onClick={() => navigateTo("applications")}
-              title="Open applications"
-              type="button"
-            >
-              <Search size={21} strokeWidth={1.7} />
-              <span className="text-base">Search applications</span>
-            </button>
-
-            <div className="hidden items-center gap-5 text-white/82 md:flex">
-              <Bell size={23} strokeWidth={1.7} />
-              <HelpCircle size={25} strokeWidth={1.7} />
-            </div>
+          <header className="shrink-0 px-6 pt-5 md:px-8 md:pt-6 lg:px-9 lg:pt-6">
+            <p className="font-serif text-[clamp(1.7rem,2.7vw,2.35rem)] font-normal leading-none tracking-[-0.01em]" data-testid="dashboard-greeting">
+              {greeting}, {firstName}
+            </p>
+            <p className="mt-1.5 text-sm text-white/56">{targetRole}</p>
           </header>
 
           <div className="shrink-0 px-6 md:px-8 lg:hidden">
@@ -177,16 +157,16 @@ export function DashboardShell({
             />
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-6 md:px-8 lg:px-9 lg:pb-8">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-5 pt-5 md:px-8 md:pt-6 lg:px-9 lg:pb-6">
             {activeModule !== "overview" && (
-              <div className="mb-5 border-b border-white/10 pb-4">
-                <p className="mb-1 font-mono text-[0.68rem] uppercase tracking-[0.16em] text-white/46">
+              <div className="mb-4 border-b border-white/10 pb-3">
+                <p className="mb-0.5 font-mono text-[0.65rem] uppercase tracking-[0.16em] text-white/46">
                   CareerOS module
                 </p>
-                <h1 className="font-serif text-[clamp(2rem,4vw,3.2rem)] font-normal leading-none tracking-[-0.01em]">
+                <h1 className="font-serif text-[clamp(1.7rem,2.7vw,2.35rem)] font-normal leading-none tracking-[-0.01em]">
                   {activeLabel}
                 </h1>
-                <p className="mt-2 text-sm text-[#AEB6C2]">{moduleDescriptions[activeModule]}</p>
+                <p className="mt-1.5 text-sm text-[#AEB6C2]">{moduleDescriptions[activeModule]}</p>
               </div>
             )}
 
@@ -326,7 +306,7 @@ function OverviewModule({
     <>
       <section className="dashboard-card-tint dashboard-card-blue mb-5 rounded-[20px] p-4 shadow-dashboard-card md:p-5">
         <div className="mb-3 flex items-center justify-between">
-          <h1 className="font-serif text-[clamp(2rem,4vw,3.2rem)] font-normal leading-none tracking-[-0.01em]">
+          <h1 className="font-serif text-[clamp(1.7rem,2.7vw,2.35rem)] font-normal leading-none tracking-[-0.01em]">
             CareerOS Control
           </h1>
         </div>

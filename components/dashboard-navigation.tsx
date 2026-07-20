@@ -28,8 +28,8 @@ export const navItems: Array<{ label: string; icon: LucideIcon; module: Dashboar
   { label: "Skill Gap", icon: ChartNoAxesCombined, module: "skill-gap" },
   { label: "CV Check", icon: FileCheck2, module: "cv-check" },
   { label: "Assistant", icon: FileCheck2, module: "assistant" },
-  { label: "Profile", icon: UserRound, module: "profile" },
   { label: "AI Insights", icon: KeyRound, module: "ai-insights" },
+  { label: "Profile", icon: UserRound, module: "profile" },
 ];
 
 export function DashboardNavigation({
@@ -50,7 +50,7 @@ export function DashboardNavigation({
       className={
         isMobile
           ? "dashboard-module-nav mb-4 flex gap-2 overflow-x-auto rounded-[18px] border border-white/10 bg-[#222833]/82 p-2 lg:hidden"
-          : "flex flex-1 flex-col gap-3"
+          : "flex flex-1 flex-col gap-1.5 overflow-y-auto pr-1"
       }
     >
       {navItems.map((item) => {
@@ -65,7 +65,7 @@ export function DashboardNavigation({
                 ? `shrink-0 rounded-xl px-3 py-2 text-xs font-semibold transition focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-none ${
                     isActive ? "bg-white/[0.1] text-white" : "text-white/68 hover:bg-white/[0.06] hover:text-white"
                   }`
-                : `flex h-12 items-center gap-3 rounded-2xl px-3 text-sm font-medium transition focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-none ${
+                : `flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium transition focus-visible:bg-white/10 focus-visible:text-white focus-visible:outline-none ${
                     isActive
                       ? "bg-white/[0.09] text-white ring-1 ring-inset ring-[#2C7BE5]/35"
                       : "text-white/64 hover:bg-white/5 hover:text-white"
