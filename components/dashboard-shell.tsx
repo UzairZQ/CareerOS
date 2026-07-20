@@ -142,13 +142,6 @@ export function DashboardShell({
         </aside>
 
         <section className="flex min-h-0 min-w-0 flex-col overflow-hidden bg-[#171A1F]">
-          <header className="shrink-0 px-6 pt-5 md:px-8 md:pt-6 lg:px-9 lg:pt-6">
-            <p className="font-serif text-[clamp(1.7rem,2.7vw,2.35rem)] font-normal leading-none tracking-[-0.01em]" data-testid="dashboard-greeting">
-              {greeting}, {firstName}
-            </p>
-            <p className="mt-1.5 text-sm text-white/56">{targetRole}</p>
-          </header>
-
           <div className="shrink-0 px-6 md:px-8 lg:hidden">
             <DashboardNavigation
               activeModule={activeModule}
@@ -174,8 +167,11 @@ export function DashboardShell({
               <OverviewModule
                 analytics={analytics}
                 applications={dashboardApplications}
+                firstName={firstName}
+                greeting={greeting}
                 onNavigate={navigateTo}
                 profileReadiness={profileReadiness}
+                targetRole={targetRole}
                 workHourLogs={workHourLogs}
                 workHoursTableReady={workHoursTableReady}
                 userId={userId}
@@ -288,22 +284,35 @@ export function DashboardShell({
 function OverviewModule({
   analytics,
   applications,
+  firstName,
+  greeting,
   onNavigate,
   profileReadiness,
+  targetRole,
   userId,
   workHourLogs,
   workHoursTableReady,
 }: {
   analytics: DashboardAnalytics;
   applications: DashboardApplicationCard[];
+  firstName: string;
+  greeting: string;
   onNavigate: (module: DashboardModule) => void;
   profileReadiness: number;
+  targetRole: string;
   userId: string;
   workHourLogs: WorkHourLog[];
   workHoursTableReady: boolean;
 }) {
   return (
     <>
+      <section className="mb-4">
+        <p className="font-serif text-[clamp(1.7rem,2.7vw,2.35rem)] font-normal leading-none tracking-[-0.01em]" data-testid="dashboard-greeting">
+          {greeting}, {firstName}
+        </p>
+        <p className="mt-1.5 text-sm text-white/56">{targetRole}</p>
+      </section>
+
       <section className="dashboard-card-tint dashboard-card-blue mb-5 rounded-[20px] p-4 shadow-dashboard-card md:p-5">
         <div className="mb-3 flex items-center justify-between">
           <h1 className="font-serif text-[clamp(1.7rem,2.7vw,2.35rem)] font-normal leading-none tracking-[-0.01em]">
